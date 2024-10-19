@@ -14,12 +14,12 @@
         <div class="form-section">
             <div class="signup-form">
                 <h2>Sign Up</h2>
-                <form>
-                    <input type="text" placeholder="Full Name" required>
-                    <input type="text" placeholder="Student ID" required>
-                    <input type="email" placeholder="Email" required>
-                    <input type="password" placeholder="Password" required>
-                    <select required>
+                <form id="signupForm">
+                    <input type="text" id="fullName" placeholder="Full Name" required>
+                    <input type="text" id="studentId" placeholder="Student ID" required>
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <select id="institution" required>
                         <option value="">-- SELECT --</option>
                         <option value="help_university">HELP University</option>
                         <option value="help_academy">HELP Academy</option>
@@ -32,5 +32,23 @@
             </div>
         </div>
     </div>
+    <script type="module">
+        import { handleSignUp } from './FirebaseConfig.js';
+
+        const signupForm = document.getElementById('signupForm');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await handleSignUp(email, password);
+                alert('Sign up successful! Redirecting to login...');
+                window.location.href = 'login.html'; // Redirect to login page after successful signup
+            } catch (error) {
+                alert('Error signing up: ' + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
