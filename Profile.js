@@ -6,13 +6,9 @@ fetch('Header.html')
     })
     .catch(error => console.error('Error loading header:', error));
 
-// Event listener for Cancel button to refresh the page
-document.querySelector('.cancel-btn').addEventListener('click', function() {
-    window.location.reload();
-});
-
-// Event listener for Done button (submission)
-document.querySelector('.submit-btn').addEventListener('click', function(event) {
-    event.preventDefault();
-    alert('Profile updated successfully!');
+// Event listeners for Edit buttons (could be expanded for form handling)
+document.querySelectorAll('.edit-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        alert('Edit button clicked');
+    });
 });
