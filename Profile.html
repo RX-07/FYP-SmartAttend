@@ -32,47 +32,67 @@
         <section class="info-section">
             <div class="info-block">
                 <h3>Personal Information</h3>
-                <button class="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                <button class="edit-btn" data-section="personal"><i class="fas fa-edit"></i> Edit</button>
                 <div class="info-details">
                     <div class="info-item">
                         <label><i class="fas fa-user"></i> First Name</label>
-                        <p>Muhammad Danial Syafiq</p>
+                        <p id="first-name">Muhammad Danial Syafiq</p>
+                        <input type="text" id="first-name-input" class="edit-input" value="Muhammad Danial Syafiq" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-user"></i> Surname</label>
-                        <p>Mohammad Zahidi</p>
+                        <p id="surname">Mohammad Zahidi</p>
+                        <input type="text" id="surname-input" class="edit-input" value="Mohammad Zahidi" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-envelope"></i> Email Address</label>
-                        <p>b1901935@helplive.edu.my</p>
+                        <p id="email">b1901935@helplive.edu.my</p>
+                        <input type="email" id="email-input" class="edit-input" value="b1901935@helplive.edu.my" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-phone"></i> Phone</label>
-                        <p>+60 16-529 7510</p>
+                        <p id="phone">+60 16-529 7510</p>
+                        <input type="tel" id="phone-input" class="edit-input" value="+60 16-529 7510" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-briefcase"></i> Department</label>
-                        <p>Information Technology</p>
+                        <p id="department">Information Technology</p>
+                        <input type="text" id="department-input" class="edit-input" value="Information Technology" style="display:none;">
                     </div>
+                </div>
+
+                <!-- Save and Cancel buttons (hidden initially) -->
+                <div class="form-buttons" id="personal-form-buttons" style="display:none;">
+                    <button class="cancel-btn"><i class="fas fa-times"></i></button>
+                    <button class="submit-btn"><i class="fas fa-check"></i></button>
                 </div>
             </div>
 
             <div class="info-block">
                 <h3>Address</h3>
-                <button class="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                <button class="edit-btn" data-section="address"><i class="fas fa-edit"></i> Edit</button>
                 <div class="info-details">
                     <div class="info-item">
                         <label><i class="fas fa-globe"></i> Country</label>
-                        <p>Malaysia</p>
+                        <p id="country">Malaysia</p>
+                        <input type="text" id="country-input" class="edit-input" value="Malaysia" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-city"></i> City/State</label>
-                        <p>Kuala Lumpur</p>
+                        <p id="city">Kuala Lumpur</p>
+                        <input type="text" id="city-input" class="edit-input" value="Kuala Lumpur" style="display:none;">
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-map-pin"></i> Postal Code</label>
-                        <p>47810</p>
+                        <p id="postal-code">47810</p>
+                        <input type="text" id="postal-code-input" class="edit-input" value="47810" style="display:none;">
                     </div>
+                </div>
+
+                <!-- Save and Cancel buttons (hidden initially) -->
+                <div class="form-buttons" id="address-form-buttons" style="display:none;">
+                    <button class="cancel-btn"><i class="fas fa-times"></i></button>
+                    <button class="submit-btn"><i class="fas fa-check"></i></button>
                 </div>
             </div>
         </section>

@@ -119,3 +119,35 @@ header {
     font-weight: bold;
     margin-top: 5px;
 }
+
+/* Updated style for tick and cross buttons */
+.cancel-btn,
+.submit-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 40px;
+    margin-right: 20px;
+}
+
+.cancel-btn {
+    background-color: #990000;
+    color: white;
+}
+
+.submit-btn {
+    background-color: #0044cc;
+    color: white;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 20px;
+}
