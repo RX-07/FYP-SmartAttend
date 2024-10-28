@@ -1,53 +1,36 @@
-// Function to toggle edit mode
-function toggleEditMode(section) {
-    const formButtons = document.getElementById(`${section}-form-buttons`);
-    const editButton = document.querySelector(`.edit-btn[data-section="${section}"]`);
-    const inputs = document.querySelectorAll(`#${section}-input`);
-    const paragraphs = document.querySelectorAll(`#${section}`);
-
-    // Show/hide inputs and form buttons
-    inputs.forEach(input => {
-        input.style.display = input.style.display === "none" ? "block" : "none";
-    });
-    paragraphs.forEach(p => {
-        p.style.display = p.style.display === "none" ? "block" : "none";
-    });
-    formButtons.style.display = formButtons.style.display === "none" ? "flex" : "none";
-    editButton.style.display = editButton.style.display === "none" ? "block" : "none";
-}
-
-// Event listeners for Edit buttons
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const section = e.currentTarget.dataset.section;
-        toggleEditMode(section);
-    });
+document.getElementById('file-upload').addEventListener('change', function (event) {
+    const reader = new FileReader();
+    reader.onload = function () {
+        document.getElementById('profile-img').src = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
 });
 
-// Event listeners for Cancel buttons
-document.querySelectorAll('.cancel-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        window.location.reload(); // Reload the page to cancel changes
-    });
+document.getElementById('edit-profile-btn').addEventListener('click', function () {
+    document.getElementById('edit-profile-form').style.display = 'grid';
+    document.getElementById('profile-info-display').style.display = 'none';
 });
 
-// Event listeners for Save buttons
-document.querySelectorAll('.submit-btn').forEach(button => {
-    button.addEventListener('click', (event) => {
-        event.preventDefault(); // Prevent default form submission
+document.getElementById('cancel-edit-btn').addEventListener('click', function () {
+    document.getElementById('edit-profile-form').style.display = 'none';
+    document.getElementById('profile-info-display').style.display = 'grid';
+});
 
-        const section = event.currentTarget.parentNode.id.split('-')[0]; // Get the section
+document.getElementById('edit-profile-form').addEventListener('submit', function (event) {
+    event.preventDefault();
 
-        // Get the inputs and paragraphs
-        const inputs = document.querySelectorAll(`#${section}-input`);
-        const paragraphs = document.querySelectorAll(`#${section}`);
+    const firstName = document.getElementById('first-name').value;
+    const surname = document.getElementById('surname').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const department = document.getElementById('department').value;
 
-        // Update the paragraphs with input values
-        inputs.forEach((input, index) => {
-            paragraphs[index].textContent = input.value; // Update paragraph content
-        });
+    document.getElementById('display-first-name').textContent = firstName;
+    document.getElementById('display-surname').textContent = surname;
+    document.getElementById('display-email').textContent = email;
+    document.getElementById('display-phone').textContent = phone;
+    document.getElementById('display-department').textContent = department;
 
-        // Hide inputs and show updated paragraphs
-        toggleEditMode(section);
-    });
+    document.getElementById('edit-profile-form').style.display = 'none';
+    document.getElementById('profile-info-display').style.display = 'grid';
 });

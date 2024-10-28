@@ -2,7 +2,7 @@
 
 // Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -26,4 +26,9 @@ export const handleSignUp = (email, password) => {
 // Function to handle user login
 export const handleLogin = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
+}
+
+// Function to send password reset email
+export const sendPasswordReset = (email) => {
+    return sendPasswordResetEmail(auth, email);
 }

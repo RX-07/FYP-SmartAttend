@@ -6,9 +6,10 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    margin-top: 70px;
 }
 
 header {
@@ -17,137 +18,250 @@ header {
     top: 0;
     z-index: 1000;
     background-color: #fff;
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
 }
 
-.profile-container {
-    padding: 20px;
+.nav-links {
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
+    gap: 15px;
     align-items: center;
-}
-
-.profile-card {
-    width: 80%;
-    background-color: #fff;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.profile-header {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.profile-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
     margin-right: 20px;
 }
 
-.profile-details {
-    flex-grow: 1;
-}
-
-.profile-details h2 {
-    margin: 0;
-    font-size: 22px;
+.nav-links a {
+    text-decoration: none;
+    color: #333;
     font-weight: bold;
+    padding: 10px;
 }
 
-.profile-details p {
-    margin: 4px 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.edit-btn {
-    background-color: #EEF5F9;
+.logout-btn {
+    background-color: #b30000;
+    color: white;
     border: none;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.dashboard {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Profile Section */
+.profile-section {
     display: flex;
-    align-items: center;
-    color: #333;
-    font-size: 14px;
-    margin-bottom: 15px; /* Add bottom margin for more space between button and text */
-}
-
-.edit-btn i {
-    margin-right: 5px;
-}
-
-.info-section {
-    width: 80%;
-    margin-top: 30px;
-}
-
-.info-block {
-    background-color: #fff;
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
-
-.info-block h3 {
-    font-size: 18px;
-    font-weight: bold;
+    justify-content: center;
     margin-bottom: 20px;
 }
 
-.info-details {
+.profile-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile Left */
+.profile-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centering edit button */
+    gap: 10px;
+}
+
+.profile-img-container {
+    position: relative;
+}
+
+.profile-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.upload-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #b30000; /* Red icon */
+    color: white;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    padding: 8px 12px; /* Added height */
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Profile Right */
+.profile-right {
+    flex-grow: 1;
+    margin-left: 30px;
+}
+
+.profile-extra-details {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 10px 20px;
 }
 
-.info-item label {
-    font-size: 13px;
-    color: #888;
-}
-
-.info-item p {
-    font-size: 15px;
-    font-weight: bold;
-    margin-top: 5px;
-}
-
-/* Updated style for tick and cross buttons */
-.cancel-btn,
-.submit-btn {
-    padding: 15px 30px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
+.profile-detail-item {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 60px;
-    height: 40px;
-    margin-right: 20px;
+    flex-direction: column;
 }
 
-.cancel-btn {
-    background-color: #990000;
-    color: white;
+.profile-detail-item label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
 }
 
-.submit-btn {
-    background-color: #0044cc;
-    color: white;
+.profile-detail-item input {
+    width: 80%; /* Adjust input width to make them shorter */
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    color: #666;
 }
 
+/* Attendance Overview Section */
+.attendance-summary h3 {
+    font-size: 22px;
+    color: black;
+    margin-bottom: 20px; /* Added margin for bottom padding */
+}
+
+.cards-container.horizontal {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px; /* Increased padding between cards */
+}
+
+.info-card {
+    width: 23%;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.info-card h4 {
+    font-size: 18px;
+    color: #000; /* Updated to black */
+    margin-bottom: 10px;
+}
+
+.info-card p {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0044cc; /* Blue icon */
+}
+
+.info-card i {
+    color: #0044cc; /* Blue icon */
+}
+
+/* Form Buttons */
 .form-buttons {
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-start; /* Align buttons next to each other */
+    height: 45px;
+    gap: 10px; /* Padding between buttons */
+}
+
+.btn-cancel {
+    background-color: #b30000;
+    color: white;
+    padding: 6px 16px; /* Reduced height with padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background-color: #0044cc;
+    color: white;
+    padding: 6px 16px; /* Reduced height with padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #990000;
+}
+
+.btn-submit:hover {
+    background-color: #003399;
+}
+
+/* MC Submission Table */
+.mc-submission {
     margin-top: 20px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+}
+
+.styled-table th, .styled-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table th {
+    background-color: #f4f4f4;
+    color: #000; /* Updated to black */
+    font-weight: bold;
+}
+
+.styled-table td {
+    color: #666;
+}
+
+.styled-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.styled-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.styled-table i {
+    color: #0044cc; /* Blue icon for MC table */
 }
