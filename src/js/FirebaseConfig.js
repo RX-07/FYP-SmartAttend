@@ -51,6 +51,7 @@ export {
 // Function to handle user login
 export const handleLogin = async (email, password) => {
     try {
+        const auth = getAuth();
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         return userCredential.user;
     } catch (error) {
