@@ -48,7 +48,7 @@
             try {
                 const userCredential = await handleLogin(email, password);
                 toastr.success('Login successful! Redirecting to profile...');
-                window.location.href = 'Profile.html'; // Redirect to profile page after successful login
+                window.location.href = 'Profile.html';
             } catch (error) {
                 toastr.warning('Error logging in: ' + error.message);
             }

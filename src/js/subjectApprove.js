@@ -1,11 +1,12 @@
 import { getFirestore, collection, onSnapshot, doc, updateDoc } from "./FirebaseConfig.js";
+import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
 toastr.options.positionClass = 'toast-bottom-right'; 
 
 const db = getFirestore();
 
-function fetchSubmittedSubjects() {
+export function fetchSubmittedSubjects() {
     const studentsCollection = collection(db, "Students");
 
     onSnapshot(studentsCollection, (snapshot) => {
@@ -55,7 +56,7 @@ function fetchSubmittedSubjects() {
 }
 
 // Function to handle the approval of a subject
-async function handleApprove(event) {
+export async function handleApprove(event) {
     const studentID = event.target.getAttribute('data-student-id');
     const subjectCode = event.target.getAttribute('data-subject-code');
 
@@ -67,6 +68,7 @@ async function handleApprove(event) {
             await updateDoc(studentDocRef, {
                 [`enrolledSubjects.${subjectCode}.status`]: "Enrolled"
             });
+            toastr.success("Enrollment approved!");
         } catch (error) {
             console.error("Error updating document: ", error);
             toastr.warning("Failed to approve enrollment. Please try again.");
@@ -75,7 +77,7 @@ async function handleApprove(event) {
 }
 
 // Function handle the rejection of a subject
-async function handleReject(event){
+export async function handleReject(event){
     const studentID = event.target.getAttribute('data-student-id');
     const subjectCode = event.target.getAttribute('data-subject-code');
 
@@ -87,6 +89,7 @@ async function handleReject(event){
             await updateDoc(studentDocRef, {
                 [`enrolledSubjects.${subjectCode}.status`]: "Rejected"
             });
+            toastr.success("Enrollment rejected!");
         } catch (error) {
             console.error("Error updating document: ", error);
            toastr.warning("Failed to reject enrollment. Please try again.");
