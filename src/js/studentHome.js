@@ -46,25 +46,45 @@ export async function fetchClassSchedules(subjectId) {
 
 // Check if a class is available at the current time
 export function isClassAvailable(schedule, now) {
-    const [day, timeRange] = schedule.timeSlot.split('_'); // Split the timeSlot into day and time range
-    const currentDay = now.toLocaleString('en-MY', { weekday: 'long' });
+    const { timeSlot, classDate } = schedule;
 
-    if (day !== currentDay) {
-        return false; 
+    if (!classDate) {
+        console.error("Class schedule does not have a valid classDate field.");
+        return false;
     }
 
-    // Parse the time range 
-    const [startTime, endTime] = timeRange.split('-');
+    // Parse classDate into a Date object
+    const scheduleDate = new Date(classDate);
 
+    // Check if the current date matches the classDate
+    if (
+        scheduleDate.getFullYear() !== now.getFullYear() ||
+        scheduleDate.getMonth() !== now.getMonth() ||
+        scheduleDate.getDate() !== now.getDate()
+    ) {
+        return false; // The schedule does not match the current date
+    }
+
+    // Split the timeSlot into day and time range
+    const [day, timeRange] = timeSlot.split('_');
+    const currentDay = now.toLocaleString('en-MY', { weekday: 'long' });
+
+    // Check if the day matches
+    if (day !== currentDay) {
+        return false;
+    }
+
+    // Parse the time range
+    const [startTime, endTime] = timeRange.split('-');
     const parseTime = (timeStr) => {
         const timeParts = timeStr.match(/(\d+)(AM|PM)/);
         if (timeParts) {
             let hour = parseInt(timeParts[1]);
             if (timeParts[2] === 'PM' && hour < 12) {
-                hour += 12;  // Convert PM times (except 12 PM) to 24-hour format
+                hour += 12; // Convert PM times (except 12 PM) to 24-hour format
             }
             if (timeParts[2] === 'AM' && hour === 12) {
-                hour = 0;  // 12 AM is midnight, so we set it to 0
+                hour = 0; // 12 AM is midnight
             }
             return hour;
         }
@@ -80,11 +100,18 @@ export function isClassAvailable(schedule, now) {
     }
 
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
     // Check if the current time is within the start and end times
-    const isAvailable = currentHour >= startHour && currentHour < endHour;
+    const isAvailable =
+        currentHour >= startHour &&
+        currentHour < endHour &&
+        currentMinute >= 0 &&
+        currentMinute < 60; // Additional validation for minute overlap if needed
+
     return isAvailable;
 }
+
 
 
 // Render subjects in card format and handle schedule checks
