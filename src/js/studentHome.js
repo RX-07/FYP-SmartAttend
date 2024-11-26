@@ -165,6 +165,7 @@ export async function displayStudentGreeting(uid) {
         const studentDoc = await getDoc(doc(db, "Students", uid));
         if (studentDoc.exists()) {
             const studentName = studentDoc.data().fullName || "Student";
+            document.getElementById('semester-type').textContent = "Semester 3, August 2024";
             document.getElementById('student-greeting').textContent = `Hello, ${studentName} 😊!`;
         }
     } catch (error) {
