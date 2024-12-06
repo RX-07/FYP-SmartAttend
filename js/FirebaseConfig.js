@@ -1,8 +1,8 @@
 // Import Firebase SDK with consistent versioning
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { getFirestore, writeBatch, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+import { getFirestore, writeBatch, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-storage.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -19,10 +19,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app); // Initialize Storage with app context
-
-
-
-
 
 // Export the Firebase instances and Firestore utility functions
 export { 
@@ -49,15 +45,10 @@ export {
 };
 
 // Function to handle user login
-export const handleLogin = async (email, password) => {
-    try {
-        const auth = getAuth();
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
-    } catch (error) {
-        throw new Error(error.message);
-    }
+export const handleLogin = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
 };
+
 // Function to send password reset email
 export const sendPasswordReset = (email) => {
     return sendPasswordResetEmail(auth, email);
