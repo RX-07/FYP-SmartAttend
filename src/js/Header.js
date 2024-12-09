@@ -59,7 +59,7 @@ function loadNavBar(userRole) {
     if (userRole === "student-logged-in") {
         navContent = `
             <a href="studentHome.html">Home</a>
-            <a href="#">Submit MC</a>
+            <a href="submitMC.html">Submit MC</a>
             <a href="subjectEnrol.html">Subject Enrolment</a>
             <a href="Profile.html">Profile</a>
             <button class="btn logout">Log Out</button>
