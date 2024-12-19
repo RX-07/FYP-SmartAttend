@@ -141,7 +141,6 @@
     "tough-cookie": "^5.0.0",
     "tr46": "^5.0.0",
     "type-detect": "^4.0.8",
-    "vite": "^5.4.11",
     "w3c-xmlserializer": "^5.0.0",
     "webidl-conversions": "^7.0.0",
     "whatwg-encoding": "^3.1.1",
@@ -169,7 +168,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^25.0.1",
     "mocha": "^10.8.2",
-    "sinon": "^19.0.2"
+    "sinon": "^19.0.2",
+    "vite": "^6.0.4"
   },
   "scripts": {
     "dev": "vite",
