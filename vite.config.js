@@ -18,6 +18,7 @@ export default defineConfig({
         subjectApprove: resolve(__dirname, 'src/subjectApprove.html'),
         subjectEnrol: resolve(__dirname, 'src/subjectEnrol.html'),
         timetable: resolve(__dirname, 'src/timetable.html'),
+        submitMC: resolve(__dirname, 'src/submitMC.html'),
       },
     },
   },
