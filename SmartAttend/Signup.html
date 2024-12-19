@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="css/Signup.css">
+    <link rel="stylesheet" href="node_modules/toastr/build/toastr.min.css">
+  <script type="module" crossorigin src="/assets/signup-WkA3KCys.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/toastr.min-MdK85Wuf.js">
+  <link rel="stylesheet" crossorigin href="/assets/toastr-DPlFYqzU.css">
+  <link rel="stylesheet" crossorigin href="/assets/signup-DqP8siAj.css">
 </head>
 <body>
     <div class="container">
         <div class="logo-section">
-            <img src="Images/Logo.jpeg" alt="HELP University Logo">
+            <img src="/assets/Logo-B6ZKfmVs.jpeg" alt="HELP University Logo">
         </div>
         <div class="form-section">
             <div class="signup-form">
@@ -39,31 +43,6 @@
             </div>
         </div>
     </div>
-    <script type="module">
-        import { handleSignUp } from './js/SignupConfig.js';
-    
-        const signupForm = document.getElementById('signupForm');
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-    
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const password = document.getElementById('password').value;
-            const fullName = document.getElementById('fullName').value;
-            const department = document.getElementById('department').value;
-            const studentId = document.getElementById('studentId').value;
-            try {
-                // Update the order in the signupForm submission handler
-                const test = await handleSignUp(email, password, fullName, department, studentId, phone);
-
-                if (test) {
-                    alert('Sign up successful! Redirecting to login...');
-                    window.location.href = 'index.html';
-                }
-            } catch (error) {
-                alert('Error signing up: ' + error.message);
-            }
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </body>
 </html>

@@ -1,9 +1,10 @@
-import readXlsxFile from 'https://cdn.jsdelivr.net/npm/read-excel-file@5.8.6/+esm';
+import readXlsxFile from 'read-excel-file';
 import { collection, db, doc, getDocs, writeBatch } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
-toastr.options.positionClass = 'toast-bottom-right'; 
+toastr.options.positionClass = 'toast-bottom-right';
+
 
 const subjectCodes = [
     "BIT101", "BIT102", "BIT103", "BIT104", "BIT106", "BIT107", "BIT108", "BIT110",
@@ -12,8 +13,8 @@ const subjectCodes = [
     "BDA100", "BDA101", "BDA203", "BDA205", "BDA206", "BDA306", "BDA307",
     "BCS102", "BCS105", "BCS201", "BCS202", "BCS302"
   ];
-  
-  function getSemester() {
+
+export function getSemester() {
     const now = new Date();
     const shortSemesterStart = new Date('2024-05-27'); // Short semester start date
     const longSemesterStart1 = new Date('2024-08-19');  // Long semester start date (August)
@@ -21,7 +22,7 @@ const subjectCodes = [
 
     const longSemesterEnd1 = new Date(longSemesterStart1);
     longSemesterEnd1.setMonth(longSemesterEnd1.getMonth() + 4);  // End of long semester (4 months duration)
-    
+
     const longSemesterEnd2 = new Date(longSemesterStart2);
     longSemesterEnd2.setMonth(longSemesterEnd2.getMonth() + 4);  // End of long semester (4 months duration)
 
@@ -41,7 +42,7 @@ const subjectCodes = [
 
 
 // Function to delete all documents in /Subjects/{subjectCode}/Classes using batch operations
-async function deleteClassesSubCollectionBatch(subjectCode, batch) {
+export async function deleteClassesSubCollectionBatch(subjectCode, batch) {
     const classesRef = collection(db, 'Subjects', subjectCode, 'Classes');
     const snapshot = await getDocs(classesRef);
 
@@ -56,12 +57,12 @@ async function deleteClassesSubCollectionBatch(subjectCode, batch) {
 }
 
 // Function to delete the subject document after deleting the classes
-async function deleteSubjectDocumentBatch(subjectCode, batch) {
+export async function deleteSubjectDocumentBatch(subjectCode, batch) {
     const subjectRef = doc(db, 'Subjects', subjectCode);
     batch.delete(subjectRef);
 }
 
-async function deleteAllSubjectsParallel() {
+export async function deleteAllSubjectsParallel() {
     const deletePromises = subjectCodes.map(async subjectCode => {
         const batch = writeBatch(db);
         await deleteClassesSubCollectionBatch(subjectCode, batch);
@@ -70,211 +71,128 @@ async function deleteAllSubjectsParallel() {
     });
 
     await Promise.all(deletePromises);  // Wait for all deletions to complete in parallel
-    console.log("All subject deletions completed.");
 }
 
 // Function to check if /Subjects collection already exists
-async function checkIfSubjectsExist() {
+export async function checkIfSubjectsExist() {
     const subjectsRef = collection(db, 'Subjects');
     const snapshot = await getDocs(subjectsRef);
 
     return snapshot.empty; 
 }
 
-// Modify the existing DOMContentLoaded listener to implement the delete functionality
-document.addEventListener('DOMContentLoaded', function () {
-    const input = document.getElementById('timetable-file');
-    const form = document.getElementById('upload-timetable-form');
+// Remaining functions related to timetable processing and displaying
+export function processTimetableData(rows) {
+    const timetable = {
+        Monday: {},
+        Tuesday: {},
+        Wednesday: {},
+        Thursday: {},
+        Friday: {}
+    };
 
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
+    let currentDay = '';
 
-        const file = input.files[0];
+    rows.forEach((row, rowIndex) => {
+        if (rowIndex === 0 || row[0] === 'Day' || row[0] === '') return;
 
-        // Check if the file is an Excel file
-        if (!file || !file.name.match(/\.(xls|xlsx)$/)) {
-            toastr.warning('Please upload a valid Excel file.');
-            return;
+        const subjectCode = row[1];
+        const venue = row[2];
+        const timeSlot = row[3];
+
+        if (row[0] && row[0] !== currentDay) {
+            currentDay = row[0];
         }
 
-        // Use readXlsxFile to read the uploaded file
-        readXlsxFile(file).then(function (data) {
-
-            if (data && data.length > 0) {
-                const headers = data[0]; // First row should contain the headers
-                const expectedHeaders = ['Day', 'Subject Code', 'Venue', 'Time'];
-
-                const isValid = expectedHeaders.every((header, index) => header === headers[index]);
-
-                if (!isValid) {
-                    toastr.error('Error: The file does not have the correct headers (Day, Subject Code, Venue, Time).');
-                    return;
-                }
-
-                const parsedSubjects = processTimetableData(data);
-
-                if (parsedSubjects) {
-                    toastr.info('Timetable uploaded and processed successfully!');
-                }
-            } else {
-                toastr.error('Error: Invalid Excel file format.');
-            }
-        }).catch(function (error) {
-            toastr.error('Error reading Excel file:', error);
-            toastr.error('Error processing file!');
-        });
-
-        // Implement the save button logic
-        document.getElementById('save').addEventListener('click', async () => {
-
-            const saveButton = document.getElementById('save');
-            saveButton.disabled = true;
-
-            const timetable = processTimetableDataFromUI();
-
-            if (!timetable) {
-                toastr.error('Error: No timetable data to save.');
-                return;
+        if (subjectCode && venue && timeSlot) {
+            if (!timetable[currentDay]) {
+                timetable[currentDay] = {};
             }
 
-            try {
-                // Check if /Subjects collection already exists
-                const subjectsExist = await checkIfSubjectsExist();
-
-                if (subjectsExist) {
-                    // Ask the user for confirmation before overwriting
-                    const confirmOverwrite = toastr.confirm('Existing subjects found. Do you want to overwrite the timetable?');
-                    if (!confirmOverwrite) {
-                        toastr.info('Timetable save operation cancelled.');
-                        return;  // Stop if the user cancels the operation
-                    }
-                }
-
-                // Proceed with deletion and saving
-                await deleteAllSubjectsParallel();
-                await saveTimetableToFirestore(timetable);
-
-                toastr.success('Timetable saved successfully!');
-            } catch (error) {
-                toastr.error('Error saving timetable. Please try again.');
-            } finally {
-                saveButton.disabled = false;
+            if (!timetable[currentDay][timeSlot]) {
+                timetable[currentDay][timeSlot] = [];
             }
+
+            timetable[currentDay][timeSlot].push({
+                subject: subjectCode,
+                venue: venue
+            });
+        }
+    });
+
+    if (Object.keys(timetable).length === 0 || !Object.values(timetable).some(day => Object.keys(day).length > 0)) {
+        document.getElementById('status').innerText = 'Error: Timetable data is missing or invalid.';
+        return null;
+    }
+
+    return displayTimetable(timetable);
+}
+
+export function displayTimetable(timetable) {
+    const tableBody = document.getElementById('timetable').getElementsByTagName('tbody')[0];
+    const tableHeader = document.getElementById('timetable').getElementsByTagName('thead')[0].getElementsByTagName('tr')[0];
+
+    tableBody.innerHTML = '';
+    tableHeader.innerHTML = '';
+
+    const timeSlotHeader = document.createElement('th');
+    timeSlotHeader.textContent = 'Time / Day';
+    tableHeader.appendChild(timeSlotHeader);
+
+    let timeSlots = new Set();
+    Object.keys(timetable).forEach(day => {
+        Object.keys(timetable[day]).forEach(timeSlot => {
+            timeSlots.add(timeSlot);
         });
     });
 
-    // Remaining functions related to timetable processing and displaying
-    function processTimetableData(rows) {
-        const timetable = {
-            Monday: {},
-            Tuesday: {},
-            Wednesday: {},
-            Thursday: {},
-            Friday: {}
+    timeSlots = Array.from(timeSlots).sort((a, b) => {
+        const timeOrder = {
+            '9AM - 12PM': 1,
+            '10AM - 1PM': 2,
+            '2PM - 4PM': 3,
+            '2PM - 5PM': 4,
+            '3PM - 4PM': 5,
+            '4PM - 5PM': 6
         };
 
-        let currentDay = '';
+        return timeOrder[a] - timeOrder[b];
+    });
 
-        rows.forEach((row, rowIndex) => {
-            if (rowIndex === 0 || row[0] === 'Day' || row[0] === '') return;
+    timeSlots.forEach(timeSlot => {
+        const timeSlotHeaderCell = document.createElement('th');
+        timeSlotHeaderCell.textContent = timeSlot;
+        tableHeader.appendChild(timeSlotHeaderCell);
+    });
 
-            const subjectCode = row[1];
-            const venue = row[2];
-            const timeSlot = row[3];
-
-            if (row[0] && row[0] !== currentDay) {
-                currentDay = row[0];
-            }
-
-            if (subjectCode && venue && timeSlot) {
-                if (!timetable[currentDay]) {
-                    timetable[currentDay] = {};
-                }
-
-                if (!timetable[currentDay][timeSlot]) {
-                    timetable[currentDay][timeSlot] = [];
-                }
-
-                timetable[currentDay][timeSlot].push({
-                    subject: subjectCode,
-                    venue: venue
-                });
-            }
-        });
-
-        if (Object.keys(timetable).length === 0 || !Object.values(timetable).some(day => Object.keys(day).length > 0)) {
-           toastr.error('Error: Timetable data is missing or invalid.');
-            return null;
-        }
-
-        return displayTimetable(timetable);
-    }
-
-    function displayTimetable(timetable) {
-        const tableBody = document.getElementById('timetable').getElementsByTagName('tbody')[0];
-        const tableHeader = document.getElementById('timetable').getElementsByTagName('thead')[0].getElementsByTagName('tr')[0];
-
-        tableBody.innerHTML = '';
-        tableHeader.innerHTML = '';
-
-        const timeSlotHeader = document.createElement('th');
-        timeSlotHeader.textContent = 'Time / Day';
-        tableHeader.appendChild(timeSlotHeader);
-
-        let timeSlots = new Set();
-        Object.keys(timetable).forEach(day => {
-            Object.keys(timetable[day]).forEach(timeSlot => {
-                timeSlots.add(timeSlot);
-            });
-        });
-
-        timeSlots = Array.from(timeSlots).sort((a, b) => {
-            const timeOrder = {
-                '9AM - 12PM': 1,
-                '10AM - 1PM': 2,
-                '2PM - 4PM': 3,
-                '2PM - 5PM': 4,
-                '3PM - 4PM': 5,
-                '4PM - 5PM': 6
-            };
-
-            return timeOrder[a] - timeOrder[b];
-        });
+    Object.keys(timetable).forEach(day => {
+        const row = tableBody.insertRow();
+        row.insertCell(0).textContent = day;
 
         timeSlots.forEach(timeSlot => {
-            const timeSlotHeaderCell = document.createElement('th');
-            timeSlotHeaderCell.textContent = timeSlot;
-            tableHeader.appendChild(timeSlotHeaderCell);
+            const cell = row.insertCell();
+            const subjects = timetable[day][timeSlot];
+
+            if (subjects && subjects.length > 0) {
+                let cellContent = '';
+                subjects.forEach(subject => {
+                    cellContent += `${subject.subject} (${subject.venue}) <br><br>`;
+                });
+                cell.innerHTML = cellContent;
+            } else {
+                cell.innerHTML = '';
+            }
         });
-
-        Object.keys(timetable).forEach(day => {
-            const row = tableBody.insertRow();
-            row.insertCell(0).textContent = day;
-
-            timeSlots.forEach(timeSlot => {
-                const cell = row.insertCell();
-                const subjects = timetable[day][timeSlot];
-
-                if (subjects && subjects.length > 0) {
-                    let cellContent = '';
-                    subjects.forEach(subject => {
-                        cellContent += `${subject.subject} (${subject.venue}) <br><br>`;
-                    });
-                    cell.innerHTML = cellContent;
-                } else {
-                    cell.innerHTML = '';
-                }
-            });
-        });
-    }
+    });
+}
 
 // Function to save the new timetable data
-async function saveTimetableToFirestore(timetable) {
+export async function saveTimetableToFirestore(timetable) {
     const semester = getSemester();  // Get the current semester
     const numberOfWeeks = semester.weeks;  // Get the weeks based on the semester type
 
     if (semester.type === 'unknown') {
-        toastr.eroor('Error: Could not determine the semester.');
+        toastr.error('Error: Could not determine the semester.');
         return;
     }
 
@@ -303,6 +221,7 @@ async function saveTimetableToFirestore(timetable) {
 
                     // Add the class to the batch
                     batch.set(classRef, {
+                        students: {},  // Placeholder for student information
                         attendance: {},  // Placeholder for student information
                         week,
                         timeSlot,
@@ -313,15 +232,13 @@ async function saveTimetableToFirestore(timetable) {
         });
 
         await batch.commit(); 
-        toastr.success('New timetable saved successfully.');
     } catch (error) {
-        toastr.error('Error saving new timetable to database:', error);
         throw error; 
     }
 }
 
 // Helper function to get the start date of the semester
-function getSemesterStartDate() {
+export function getSemesterStartDate() {
     const now = new Date();
     const semester = getSemester(); // Get the current semester
 
@@ -347,7 +264,7 @@ function getSemesterStartDate() {
 }
 
 // Helper function to calculate the date for a specific class day and week
-function getClassDateForWeek(startDate, classDay, weekNumber) {
+export function getClassDateForWeek(startDate, classDay, weekNumber) {
     const dayOfWeekMap = {
         Monday: 1,
         Tuesday: 2,
@@ -373,35 +290,114 @@ function getClassDateForWeek(startDate, classDay, weekNumber) {
 
     return `${year}-${month}-${day}`;
 }
-    
 
-    // Function to process timetable data from the UI
-    function processTimetableDataFromUI() {
-        const timetable = {};
+// Function to process timetable data from the UI
+export function processTimetableDataFromUI() {
+    const timetable = {};
 
-        const tableBody = document.getElementById('timetable').getElementsByTagName('tbody')[0];
-        const rows = tableBody.rows;
+    const tableBody = document.getElementById('timetable').getElementsByTagName('tbody')[0];
+    const rows = tableBody.rows;
 
-        for (let i = 0; i < rows.length; i++) {
-            const day = rows[i].cells[0].textContent.trim();
-            for (let j = 1; j < rows[i].cells.length; j++) {
-                const timeSlot = document.querySelector('thead tr').cells[j].textContent.trim();
-                const subjects = rows[i].cells[j].innerHTML.split('<br><br>').filter(Boolean);
+    for (let i = 0; i < rows.length; i++) {
+        const day = rows[i].cells[0].textContent.trim();
+        for (let j = 1; j < rows[i].cells.length; j++) {
+            const timeSlot = document.querySelector('thead tr').cells[j].textContent.trim();
+            const subjects = rows[i].cells[j].innerHTML.split('<br><br>').filter(Boolean);
 
-                subjects.forEach(subjectWithVenue => {
-                    const [subjectCode] = subjectWithVenue.replace(/\(|\)/g, '').split(' ');
+            subjects.forEach(subjectWithVenue => {
+                const [subjectCode] = subjectWithVenue.replace(/\(|\)/g, '').split(' ');
 
-                    if (!timetable[subjectCode]) {
-                        timetable[subjectCode] = [];
-                    }
+                if (!timetable[subjectCode]) {
+                    timetable[subjectCode] = [];
+                }
 
-                    timetable[subjectCode].push(`${day}_${timeSlot}`);
-                });
-            }
+                timetable[subjectCode].push(`${day}_${timeSlot}`);
+            });
+        }
+    }
+
+    return timetable;
+}
+
+// Modify the existing DOMContentLoaded listener to implement the delete functionality
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('timetable-file');
+    const form = document.getElementById('upload-timetable-form');
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const file = input.files[0];
+
+        // Check if the file is an Excel file
+        if (!file || !file.name.match(/\.(xls|xlsx)$/)) {
+            toastr.warning('Please upload a valid Excel file.');
+            return;
         }
 
-        return timetable;
-    }
+        // Use readXlsxFile to read the uploaded file
+        readXlsxFile(file).then(function (data) {
+
+            if (data && data.length > 0) {
+                const headers = data[0]; // First row should contain the headers
+                const expectedHeaders = ['Day', 'Subject Code', 'Venue', 'Time'];
+
+                const isValid = expectedHeaders.every((header, index) => header === headers[index]);
+
+                if (!isValid) {
+                    document.getElementById('status').innerText = 'Error: The file does not have the correct headers (Day, Subject Code, Venue, Time).';
+                    return;
+                }
+
+                const parsedSubjects = processTimetableData(data);
+
+                if (parsedSubjects) {
+                    document.getElementById('status').innerText = 'Timetable uploaded and processed successfully!';
+                }
+            } else {
+                document.getElementById('status').innerText = 'Error: Invalid Excel file format.';
+            }
+        }).catch(function (error) {
+            toastr.error('Error reading Excel file:', error);
+            document.getElementById('status').innerText = 'Error processing file!';
+        });
+
+        // Implement the save button logic
+        document.getElementById('save').addEventListener('click', async () => {
+
+            const saveButton = document.getElementById('save');
+            saveButton.disabled = true;
+
+            const timetable = processTimetableDataFromUI();
+
+            if (!timetable) {
+                toastr.warning('Error: No timetable data to save.');
+                return;
+            }
+
+            try {
+                // Check if /Subjects collection already exists
+                const subjectsExist = await checkIfSubjectsExist();
+
+                if (subjectsExist) {
+                    // Ask the user for confirmation before overwriting
+                    const confirmOverwrite = confirm('Existing subjects found. Do you want to overwrite the timetable?');
+                    if (!confirmOverwrite) {
+                        toastr.info('Timetable save operation cancelled.');
+                        return;  // Stop if the user cancels the operation
+                    }
+                }
+
+                // Proceed with deletion and saving
+                await deleteAllSubjectsParallel();
+                await saveTimetableToFirestore(timetable);
+
+                toastr.success('Timetable saved successfully!');
+            } catch (error) {
+                toastr.error('Error saving timetable. Please try again.', error);
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+    });
 });
-
-

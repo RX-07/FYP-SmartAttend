@@ -5,7 +5,7 @@ import 'toastr/build/toastr.min.css';
 toastr.options.positionClass = 'toast-bottom-right'; 
 
 // Fetch approved subjects for logged-in user
-async function fetchApprovedSubjects(uid) {
+export async function fetchApprovedSubjects(uid) {
     try {
         const studentDoc = await getDoc(doc(db, "Students", uid));
         if (studentDoc.exists()) {
@@ -28,7 +28,7 @@ async function fetchApprovedSubjects(uid) {
 }
 
 // Fetch class schedules for a subject from Firestore
-async function fetchClassSchedules(subjectId) {
+export async function fetchClassSchedules(subjectId) {
     try {
         const classesRef = collection(db, 'Subjects', subjectId, 'Classes');
         const classesSnapshot = await getDocs(classesRef);
@@ -45,22 +45,47 @@ async function fetchClassSchedules(subjectId) {
 }
 
 // Check if a class is available at the current time
-function isClassAvailable(schedule, now) {
-    const [day, timeRange] = schedule.timeSlot.split('_'); //
-    const currentDay = now.toLocaleString('en-US', { weekday: 'long' });
+export function isClassAvailable(schedule, now) {
+    const { timeSlot, classDate } = schedule;
 
-    if (day !== currentDay) {
-        return false; 
+    if (!classDate) {
+        console.error("Class schedule does not have a valid classDate field.");
+        return false;
     }
 
-    // Parse the time range 
-    const [startTime, endTime] = timeRange.split('-');
+    // Parse classDate into a Date object
+    const scheduleDate = new Date(classDate);
 
+    // Check if the current date matches the classDate
+    if (
+        scheduleDate.getFullYear() !== now.getFullYear() ||
+        scheduleDate.getMonth() !== now.getMonth() ||
+        scheduleDate.getDate() !== now.getDate()
+    ) {
+        return false; // The schedule does not match the current date
+    }
+
+    // Split the timeSlot into day and time range
+    const [day, timeRange] = timeSlot.split('_');
+    const currentDay = now.toLocaleString('en-MY', { weekday: 'long' });
+
+    // Check if the day matches
+    if (day !== currentDay) {
+        return false;
+    }
+
+    // Parse the time range
+    const [startTime, endTime] = timeRange.split('-');
     const parseTime = (timeStr) => {
         const timeParts = timeStr.match(/(\d+)(AM|PM)/);
         if (timeParts) {
             let hour = parseInt(timeParts[1]);
-            if (timeParts[2] === 'PM' && hour < 12) hour += 12; // Convert to 24-hour format
+            if (timeParts[2] === 'PM' && hour < 12) {
+                hour += 12; // Convert PM times (except 12 PM) to 24-hour format
+            }
+            if (timeParts[2] === 'AM' && hour === 12) {
+                hour = 0; // 12 AM is midnight
+            }
             return hour;
         }
         return null;
@@ -75,16 +100,30 @@ function isClassAvailable(schedule, now) {
     }
 
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
     // Check if the current time is within the start and end times
-    return currentHour >= startHour && currentHour < endHour;
+    const isAvailable =
+        currentHour >= startHour &&
+        currentHour < endHour &&
+        currentMinute >= 0 &&
+        currentMinute < 60; // Additional validation for minute overlap if needed
+
+    return isAvailable;
 }
 
 
+
 // Render subjects in card format and handle schedule checks
-async function renderSubjectsAsCards(subjects) {
-    const container = document.getElementById('subjects-container');
-    container.innerHTML = '';
+export async function renderSubjectsAsCards(subjects) {
+    const container = document.getElementById('subjects-container'); // Move this outside the event listener
+
+    if (!container) {
+        console.error('Container with ID "subjects-container" not found.');
+        return;
+    }
+
+    container.innerHTML = ''; // Clear previous content
 
     if (subjects.length === 0) {
         container.innerHTML = "<p>No enrolled subjects found.</p>";
@@ -94,6 +133,7 @@ async function renderSubjectsAsCards(subjects) {
     const now = new Date();
 
     for (const subject of subjects) {
+
         const classSchedules = await fetchClassSchedules(subject.id);
 
         // Check if any class matches the current day and time
@@ -120,11 +160,12 @@ async function renderSubjectsAsCards(subjects) {
 }
 
 // Fetch and display the student’s name as a greeting
-async function displayStudentGreeting(uid) {
+export async function displayStudentGreeting(uid) {
     try {
         const studentDoc = await getDoc(doc(db, "Students", uid));
         if (studentDoc.exists()) {
             const studentName = studentDoc.data().fullName || "Student";
+            document.getElementById('semester-type').textContent = "Semester 3, August 2024";
             document.getElementById('student-greeting').textContent = `Hello, ${studentName} 😊!`;
         }
     } catch (error) {
@@ -133,7 +174,7 @@ async function displayStudentGreeting(uid) {
 }
 
 // Handle Check-In Button Click
-async function handleCheckIn(subjectId, classId) {
+export async function handleCheckIn(subjectId, classId) {
     if (!classId) {
         toastr.warning("Class is currently unavailable for check-in.");
         return;
@@ -211,7 +252,7 @@ document.addEventListener('click', async (e) => {
 });
 
 // Main function for authentication and displaying data
-function init() {
+export function init() {
     auth.onAuthStateChanged(async (authUser) => {
         if (authUser) {
             const uid = authUser.uid;

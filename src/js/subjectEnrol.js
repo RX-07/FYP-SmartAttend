@@ -1,4 +1,4 @@
-import { db, doc, updateDoc, auth, onSnapshot } from './FirebaseConfig.js';
+import { db, doc, getDoc, updateDoc, auth, onSnapshot } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
@@ -79,7 +79,7 @@ const subjects = {
 };
 
 // Function to filter subjects for the dropdowns
-function filterSubjects() {
+export function filterSubjects() {
     const department = document.getElementById('department').value;
     const year = document.getElementById('year').value;
     const yearSelect = document.getElementById('year');
@@ -108,7 +108,7 @@ function filterSubjects() {
 window.filterSubjects = filterSubjects;
 
 // Function to fetch and display enrolled subjects for the logged-in user
-function fetchEnrolledSubjects() {
+export function fetchEnrolledSubjects() {
     if (!uid) {
         console.log("User is not logged in. Cannot fetch subjects.");
         return;
@@ -124,8 +124,14 @@ function fetchEnrolledSubjects() {
         if (docSnapshot.exists()) {
             const enrolledSubjects = docSnapshot.data().enrolledSubjects;
 
-            // Populate table with enrolled subjects
-            for (const [code, { name, status }] of Object.entries(enrolledSubjects || {})) {
+            // Convert the enrolledSubjects object to an array of entries, then sort it by status
+            const sortedSubjects = Object.entries(enrolledSubjects || {}).sort((a, b) => {
+                const statusOrder = ["Enrolled", "Submitted for approval", "Rejected"];
+                return statusOrder.indexOf(a[1].status) - statusOrder.indexOf(b[1].status);
+            });
+
+            // Populate table with sorted subjects
+            for (const [code, { name, status }] of sortedSubjects) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${code}</td>
@@ -143,7 +149,7 @@ function fetchEnrolledSubjects() {
 }
 
 // Function to handle form submission and add enrollment data to the "enrolledSubjects" map
-async function submitEnrollment(event) {
+export async function submitEnrollment(event) {
     event.preventDefault();
 
     const department = document.getElementById('department').value;
@@ -156,7 +162,20 @@ async function submitEnrollment(event) {
         const studentDocRef = doc(db, "Students", uid);
 
         try {
-            // Add or update the enrolled subject in the "enrolledSubjects" map with status
+            // Fetch the student's document to check for existing subjects
+            const studentDoc = await getDoc(studentDocRef);
+
+            if (studentDoc.exists()) {
+                const enrolledSubjects = studentDoc.data().enrolledSubjects || {};
+
+                // Check if the subject already exists with the status "Enrolled"
+                if (enrolledSubjects[selectedSubjectCode]?.status === "Enrolled") {
+                    toastr.info("You are already enrolled in this subject.");
+                    return;
+                }
+            }
+
+            // Proceed to update or add the subject with "Submitted for approval" status
             await updateDoc(studentDocRef, {
                 [`enrolledSubjects.${selectedSubjectCode}`]: {
                     name: selectedSubjectName,
@@ -166,7 +185,7 @@ async function submitEnrollment(event) {
 
             toastr.success("Enrollment submitted for approval!");
         } catch (error) {
-            toastr.error("Error updating document: ", error);
+            toastr.error("Error updating document: " + error.message);
             toastr.warning("Failed to enroll. Please try again.");
         }
     } else {
@@ -174,4 +193,15 @@ async function submitEnrollment(event) {
     }
 }
 
-document.querySelector('.enrollment-form').addEventListener('submit', submitEnrollment);
+function setupEventListeners() {
+    const form = document.querySelector('.enrollment-form');
+    if (form) {
+        form.addEventListener('submit', submitEnrollment);
+    }
+}
+
+export { setupEventListeners };
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+});
