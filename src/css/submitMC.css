@@ -76,37 +76,6 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* Navbar Styling */
-.navbar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 10px 20px;
-}
-
-.navbar .logo-section img {
-    max-height: 50px;
-}
-
-.navbar .navbar-toggler {
-    border: none;
-}
-
-.navbar .nav-links {
-    margin-top: 10px;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: #495057;
-    font-size: 1rem;
-    padding: 5px 10px;
-    transition: color 0.2s;
-}
-
-.nav-links a:hover {
-    color: #007bff;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
