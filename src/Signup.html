@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="node_modules/toastr/build/toastr.min.css">
+    <link rel="stylesheet" href="css/Signup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <img src="Images/Logo.jpeg" alt="HELP University Logo">
+        </div>
+        <div class="form-section">
+            <div class="signup-form">
+                <h2>Sign Up</h2>
+                <form id="signupForm">
+                    <input type="text" id="fullName" placeholder="Full Name" required>
+                    <input type="text" id="studentId" placeholder="Student ID" required>
+                    <select id="department" required>
+                        <option value="">-- SELECT --</option>
+                        <option value="BIT">Bachelor of Information Technology</option>
+                        <option value="BDA">Bachelor of Data Analytics</option>
+                        <option value="BCS">Bachelor of Computer Science</option>
+                    </select>
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="tel" id="phone" placeholder="Phone" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <select id="institution" required>
+                        <option value="">-- SELECT --</option>
+                        <option value="help_university">HELP University</option>
+                        <option value="help_academy">HELP Academy</option>
+                    </select>
+                    <button type="submit" class="signup-btn">Sign Up</button>
+                    <div class="or">Or</div>
+                    <a href="index.html" class="login-btn">Login</a>
+                </form>
+                <a href="ForgotPassword.html" class="forgot-password">Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="module">
+        import { handleSignUp } from './js/SignupConfig.js';
+    
+        const signupForm = document.getElementById('signupForm');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const fullName = document.getElementById('fullName').value;
+            const department = document.getElementById('department').value;
+            const studentId = document.getElementById('studentId').value;
+            try {
+                // Update the order in the signupForm submission handler
+                const test = await handleSignUp(email, password, fullName, department, studentId, phone);
+
+                if (test) {
+                    toastr.success('Sign up successful! Redirecting to login...');
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                toastr.warning('Error signing up: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

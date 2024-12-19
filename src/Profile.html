@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="node_modules/toastr/build/toastr.min.css">
+    <link rel="stylesheet" href="css/Profile.css">
+    <link rel="stylesheet" href="css/Header.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navbar Section -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <!-- Logo Section -->
+                <div class="logo-section">
+                    <img src="Images/Logo.jpeg" alt="HELP University Logo">
+                </div>
+                
+                <!-- Hamburger Menu Button for Mobile View -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+    
+                <!-- Nav Links Section -->
+                <div class="collapse navbar-collapse flex-column" id="navbarNav">
+                    <div id="nav-links" class="nav-links ms-auto"></div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard">
+        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="profile-card">
+                <div class="profile-left">
+                    <div class="profile-img-container">
+                        <img id="profile-img" src="Images/Profile.jpeg" alt="Student Profile Picture" class="profile-img">
+                        <label for="file-upload" class="upload-icon">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="file-upload" style="display: none;" accept="image/*">
+                    </div>
+                    <button id="edit-modal-btn" class="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                </div>
+
+                <div class="profile-right">
+                    <div id="profile-info-display" class="profile-extra-details">
+                        <div class="profile-detail-item">
+                            <label>Full Name:</label>
+                            <p id="display-full-name"></p>
+                        </div>
+                        <div class="profile-detail-item">
+                            <label>Student ID:</label>
+                            <p id="display-student-id"></p>
+                        </div>
+                        <div class="profile-detail-item">
+                            <label>Email:</label>
+                            <p id="display-email"></p>
+                        </div>
+                        <div class="profile-detail-item">
+                            <label>Phone:</label>
+                            <p id="display-phone"></p>
+                        </div>
+                        <div class="profile-detail-item">
+                            <label>Department:</label>
+                            <p id="display-department"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Overview -->
+        <section class="attendance-summary">
+            <h3>Attendance Overview</h3>
+            <div class="cards-container horizontal">
+                <div class="info-card">
+                    <h4>Total Classes Attended</h4>
+                    <p id="total-classes-attended"><i class="fas fa-check-circle"></i> 28/40</p>
+                </div>
+                <div class="info-card">
+                    <h4>Absences</h4>
+                    <p id="absences"><i class="fas fa-times-circle"></i> 5</p>
+                </div>
+                <div class="info-card">
+                    <h4>Medical Certificates Submitted</h4>
+                    <p id="mc-submitted"><i class="fas fa-file-medical"></i> 3</p>
+                </div>
+                <div class="info-card">
+                    <h4>Upcoming Classes</h4>
+                    <p id="upcoming-classes"><i class="fas fa-calendar-alt"></i> 7</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Medical Certificate Submission Section -->
+        <section class="mc-submission">
+            <h3>Medical Certificate Submission</h3>
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>MC Submitted</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>September 25, 2023</td>
+                        <td><i class="fas fa-check-circle" style="color: #27ae60;"></i> Present</td>
+                        <td><i class="fas fa-file-medical" style="color: #0044cc;"></i> Yes</td>
+                        <td>Medical certificate submitted</td>
+                    </tr>
+                    <tr>
+                        <td>September 20, 2023</td>
+                        <td><i class="fas fa-times-circle" style="color: #e74c3c;"></i> Absent</td>
+                        <td><i class="fas fa-file-medical" style="color: #0044cc;"></i> Yes</td>
+                        <td>Medical certificate submitted</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal for editing profile -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <!-- Close Button -->
+            <span class="close">&times;</span>
+
+            <!-- Profile Edit Form -->
+            <form id="edit-profile-form" class="profile-extra-details">
+
+                <!-- Full Name Field -->
+                <div class="profile-detail-item">
+                    <label for="full-name">Full Name:</label>
+                    <input type="text" id="full-name">
+                </div>
+
+                <!-- Student ID Field -->
+                <div class="profile-detail-item">
+                    <label for="student-id">Student ID:</label>
+                    <!--Student won't be able to change their studentID-->
+                    <input type="text" id="student-id" disabled>
+                </div>
+
+                <!-- Email Field -->
+                <div class="profile-detail-item">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email">
+                </div>
+
+                <!-- Phone Field -->
+                <div class="profile-detail-item">
+                    <label for="phone">Phone:</label>
+                    <input type="tel" id="phone">
+                </div>
+
+                <!-- Department Field -->
+                <div class="profile-detail-item">
+                    <label for="department">Department:</label>
+                    <input type="text" id="department">
+                </div>
+
+                <!-- Form Buttons (Cancel and Submit) -->
+                <div class="form-buttons">
+                    <!-- Cancel Button -->
+                    <button type="button" class="btn-cancel" id="cancel-edit-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="module" src="js/FirebaseConfig.js"></script>
+    <script type="module" src="js/Profile.js"></script>
+    <script type="module" src="js/Header.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
