@@ -16,6 +16,7 @@ export default defineConfig({
         signup: resolve(__dirname, 'src/Signup.html'),
         studentHome: resolve(__dirname, 'src/studentHome.html'),
         subjectApprove: resolve(__dirname, 'src/subjectApprove.html'),
+        submitMC: resolve(__dirname, 'src/submitMC.html'),
         subjectEnrol: resolve(__dirname, 'src/subjectEnrol.html'),
         timetable: resolve(__dirname, 'src/timetable.html'),
         submitMC: resolve(__dirname, 'src/submitMC.html'),
