@@ -49,7 +49,6 @@
     "fill-range": "^7.1.1",
     "find-up": "^5.0.0",
     "firebase": "^11.0.2",
-    "firebase-admin": "^13.0.1",
     "flat": "^5.0.2",
     "form-data": "^4.0.1",
     "formidable": "^3.5.2",

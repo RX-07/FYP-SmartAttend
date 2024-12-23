@@ -1,6 +1,6 @@
 import { auth, db, doc, getDoc, updateDoc } from "./FirebaseConfig.js";
 
-const baseUrl = "https://your-domain.com/calendar/"; // Replace with your server's base URL
+const baseUrl = "https://us-central1-smartattend-f36c4.cloudfunctions.net/calendar"; // Replace with your Cloud Function's URL
 
 // Function to handle calendar URL generation and storage
 async function handleCalendarUrl(uid) {
@@ -13,7 +13,7 @@ async function handleCalendarUrl(uid) {
 
             // Generate and store the calendar URL if it doesn't exist
             if (!calendarUrl) {
-                calendarUrl = `${baseUrl}${uid}`; // Unique URL for the user
+                calendarUrl = `${baseUrl}/${uid}`; // Unique URL for the user
                 await updateDoc(userDocRef, { calendarUrl });
                 console.log("Generated and stored calendar URL:", calendarUrl);
             } else {
