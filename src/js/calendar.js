@@ -1,13 +1,26 @@
-import { auth, db, doc, getDoc, collection, getDocs } from "./FirebaseConfig.js";
+import {
+    auth,
+    db,
+    storage,
+    doc,
+    getDoc,
+    collection,
+    getDocs,
+    updateDoc,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+} from "./FirebaseConfig.js";
 import ical from 'ical-generator';
-import moment from 'moment';
+import moment from 'moment-timezone';
+
 
 // Function to convert timeSlot and classDate into start and end times
-function getStartEndTime(timeSlot, classDate) {
+export function getStartEndTime(timeSlot, classDate) {
     const [day, timeRange] = timeSlot.split('_');
     const [startTime, endTime] = timeRange.split(' - ');
 
-    const startDate = moment(classDate, 'YYYY-MM-DD'); // Parse the class date
+    const startDate = moment.tz(classDate, 'YYYY-MM-DD', 'Asia/Kuala_Lumpur'); // Parse the class date
     const startHour = moment(startTime, 'hA').format('HH:mm');
     const endHour = moment(endTime, 'hA').format('HH:mm');
 
@@ -28,7 +41,7 @@ function getStartEndTime(timeSlot, classDate) {
 }
 
 // Function to generate calendar for the logged-in user
-async function generateCalendar(uid) {
+export async function generateCalendar(uid) {
     const calendar = ical({ name: 'Class Schedule' });
 
     try {
@@ -81,26 +94,61 @@ async function generateCalendar(uid) {
     }
 }
 
-// Function to trigger file download
-function downloadCalendar(icsData) {
-    const blob = new Blob([icsData], { type: 'text/calendar' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'class_schedule.ics';
-    link.click();
+// Function to upload calendar to Firebase Storage and generate URL
+export async function uploadCalendar(uid, icsData) {
+    try {
+        const storageRef = ref(storage, `calendars/${uid}.ics`);
+        const blob = new Blob([icsData], { type: "text/calendar" });
+
+        // Upload the file to Firebase Storage
+        await uploadBytes(storageRef, blob);
+
+        // Get the public URL of the uploaded file
+        const downloadUrl = await getDownloadURL(storageRef);
+
+        // Save the URL in Firestore
+        const userDocRef = doc(db, "Students", uid);
+        await updateDoc(userDocRef, { calendarUrl: downloadUrl });
+
+        // Display the calendar URL
+        const calendarLinkElement = document.getElementById("calendar-link");
+        calendarLinkElement.setAttribute("href", downloadUrl);
+
+    } catch (error) {
+        console.error("Error uploading calendar:", error);
+    }
 }
 
-// Fetch enrolled subjects and generate the calendar when the user is logged in
-auth.onAuthStateChanged((authUser) => {
+// Function to check and update the calendar for the user
+export async function checkAndUpdateCalendar(uid) {
+    try {
+        const userDocRef = doc(db, 'Students', uid);
+        const userDoc = await getDoc(userDocRef);
+        const currentCalendarUrl = userDoc.data()?.calendarUrl;
+
+        if (currentCalendarUrl) {
+            const icsData = await generateCalendar(uid);
+            await uploadCalendar(uid, icsData);
+        } else {
+            const icsData = await generateCalendar(uid);
+            await uploadCalendar(uid, icsData);
+        }
+    } catch (error) {
+        console.error('Error checking/updating calendar:', error);
+    }
+}
+
+// Trigger calendar generation and upload
+auth.onAuthStateChanged(async (authUser) => {
     if (authUser) {
         const uid = authUser.uid;
 
         generateCalendar(uid).then(icsData => {
-            downloadCalendar(icsData);
+            uploadCalendar(uid, icsData);
         }).catch(error => {
             console.error('Error generating calendar:', error);
         });
     } else {
-        console.log('No user is currently logged in');
+        console.log("No user is currently logged in");
     }
 });

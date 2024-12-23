@@ -1,5 +1,6 @@
 import readXlsxFile from 'read-excel-file';
-import { collection, db, doc, getDocs, writeBatch } from './FirebaseConfig.js';
+import { collection, db, doc, getDocs, writeBatch, storage, ref, getDownloadURL } from './FirebaseConfig.js';
+import { checkAndUpdateCalendar } from './calendar.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
@@ -268,6 +269,7 @@ export async function saveTimetableToFirestore(timetable) {
             }
         });
 
+        checkAndUpdateAllCalendars();
         await batch.commit(); 
     } catch (error) {
         throw error; 
@@ -383,6 +385,45 @@ export function processTimetableDataFromUI() {
     }
 
     return timetable;
+}
+
+// Function to fetch all students' UID from Firestore
+async function getAllStudents() {
+    const studentsSnapshot = await getDocs(collection(db, 'Students'));
+    const students = [];
+    studentsSnapshot.forEach(doc => {
+        students.push(doc.id); // Store each student's UID (document ID)
+    });
+    return students;
+}
+
+// Function to check if the .ics file exists for a student in Firebase Storage
+async function checkAndUpdateAllCalendars() {
+    try {
+        const students = await getAllStudents(); // Get all students' UIDs
+
+        for (const uid of students) {
+            const storageRef = ref(storage, `calendars/${uid}.ics`);
+
+            try {
+                // Check if the .ics file exists for the student in Firebase Storage
+                await getDownloadURL(storageRef); // This will throw an error if the file doesn't exist
+
+                await checkAndUpdateCalendar(uid); // Update the calendar
+            } catch (error) {
+                if (error.code === 'storage/object-not-found') {
+                    await checkAndUpdateCalendar(uid); // Create new calendar if no file exists
+                } else {
+                    console.error('Error checking file in Firebase Storage:', error);
+                }
+            }
+        }
+
+        console.log('All calendars checked and updated.');
+
+    } catch (error) {
+        console.error('Error fetching students:', error);
+    }
 }
 
 // Modify the existing DOMContentLoaded listener to implement the delete functionality
