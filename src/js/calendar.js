@@ -110,13 +110,26 @@ export async function uploadCalendar(uid, icsData) {
         const userDocRef = doc(db, "Students", uid);
         await updateDoc(userDocRef, { calendarUrl: downloadUrl });
 
-        // Display the calendar URL
-        const calendarLinkElement = document.getElementById("calendar-link");
-        calendarLinkElement.setAttribute("href", downloadUrl);
+        updateCalendarLink(downloadUrl);
 
     } catch (error) {
         console.error("Error uploading calendar:", error);
     }
+}
+
+// Function to convert the download URL to webcal link
+function convertToWebcal(url) {
+    // Simply replace 'https' with 'webcal' for calendar app compatibility
+    return url.replace('https', 'webcal');
+}
+
+// Function to update the calendar link
+function updateCalendarLink(downloadUrl) {
+    const webcalUrl = convertToWebcal(downloadUrl);
+    const calendarLinkElement = document.getElementById("calendar-link");
+
+    // Set the webcal link as the href of the calendar link
+    calendarLinkElement.setAttribute("href", webcalUrl);
 }
 
 // Function to check and update the calendar for the user
