@@ -24,7 +24,6 @@ body {
 
 #student-greeting {
     font-size: 20px;
-    margin-bottom: 20px;
 }
 
 .cards-container {
@@ -32,6 +31,7 @@ body {
     flex-wrap: wrap;
     gap: 24px;
     justify-content: center;
+    margin-top: 20px;
 }
 
 .card {
