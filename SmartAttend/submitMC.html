@@ -1,22 +1,18 @@
+<!-- submitMC.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Check-In Page</title>
-    <!-- Include Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="node_modules/toastr/build/toastr.min.css">
-  <script type="module" crossorigin src="/assets/subjectApprove-DCDEIzre.js"></script>
+    <title>Submit Medical Certificate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">  <!-- Linking the CSS --> 
+  <script type="module" crossorigin src="/assets/submitMC-DlfVdI25.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/FirebaseConfig-Cm1xbBeR.js">
   <link rel="modulepreload" crossorigin href="/assets/Header-DJ8cievG.js">
-  <link rel="modulepreload" crossorigin href="/assets/toastr.min-B9K3Jeb8.js">
-  <link rel="stylesheet" crossorigin href="/assets/toastr-DPlFYqzU.css">
-  <link rel="stylesheet" crossorigin href="/assets/subjectApprove-DubjuBZG.css">
+  <link rel="stylesheet" crossorigin href="/assets/submitMC-DYdNI3NX.css">
   <link rel="stylesheet" crossorigin href="/assets/Header-C7bypHhb.css">
 </head>
 <body>
-
     <!-- Navbar Section -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -38,27 +34,24 @@
             </div>
         </nav>
     </header>
-    
 
-    <!-- Main Container Section -->
-    <div class="container mt-5">
-        <table class="table table-striped approval-table">
-            <thead>
-                <tr>
-                    <th>Student ID</th>
-                    <th>Subject Code</th>
-                    <th>Subject Name</th>
-                    <th>Enrollment Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Table data will be dynamically populated here -->
-            </tbody>
-        </table>
+    <div class="container">
+        <h1>Medical Certificate Form</h1>
+        <form id="mcForm">
+            <label for="file">Upload Medical Certificate (PDF or Image):</label>
+            <input type="file" id="file" required /><br><br>
+
+            <label for="reason">Reason for Sick Leave:</label>
+            <textarea id="reason" rows="4" cols="50" placeholder="Enter the reason for your sick leave" required></textarea><br><br>
+
+            <label for="note">Additional Note (Optional):</label>
+            <textarea id="note" rows="4" cols="50" placeholder="Enter any additional note here..."></textarea><br><br>
+
+            <button type="submit">Submit</button>
+        </form>
     </div>
 
-    <!-- Include Bootstrap JS and Popper.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> <!-- Linking the JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
