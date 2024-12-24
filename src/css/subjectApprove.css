@@ -29,7 +29,7 @@ body {
 .approval-table th, .approval-table td {
     border: 1px solid #ccc;
     padding: 10px;
-    text-align: left;
+    text-align: center;
 }
 
 .approval-table th {
@@ -81,4 +81,27 @@ body {
 .button-container {
     display: flex;
     justify-content: space-between;
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        font-size: 12px;
+    }
+
+    .button-container {
+        flex-direction: column;
+        gap: 5px; 
+    }
+
+    .approve-button {
+        padding: 5px 10px;
+        font-size: 12px;
+        margin: 4px 2px;
+    }
+
+    .reject-button {
+        padding: 5px 10px;
+        font-size: 12px;
+        margin: 4px 2px;
+    }
 }
