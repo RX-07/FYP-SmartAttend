@@ -1,10 +1,10 @@
 import readXlsxFile from 'read-excel-file';
-import { collection, db, doc, getDocs, writeBatch } from './FirebaseConfig.js';
+import { collection, db, doc, getDocs, writeBatch, storage, ref, getDownloadURL } from './FirebaseConfig.js';
+import { checkAndUpdateCalendar } from './calendar.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
 toastr.options.positionClass = 'toast-bottom-right';
-
 
 const subjectCodes = [
     "BIT101", "BIT102", "BIT103", "BIT104", "BIT106", "BIT107", "BIT108", "BIT110",
@@ -14,28 +14,57 @@ const subjectCodes = [
     "BCS102", "BCS105", "BCS201", "BCS202", "BCS302"
   ];
 
+const venueMap = {};
+
 export function getSemester() {
     const now = new Date();
-    const shortSemesterStart = new Date('2024-05-27'); // Short semester start date
-    const longSemesterStart1 = new Date('2024-08-19');  // Long semester start date (August)
-    const longSemesterStart2 = new Date('2024-01-08');  // Long semester start date (January)
+    const currentYear = now.getFullYear();
+    const nextYear = currentYear + 1;
+
+    // If the current month is December, set all semester years to the next year
+    const isDecember = now.getMonth() === 11;
+
+    const semesterYear = isDecember ? nextYear : currentYear;
+
+    // Define semester start and end dates dynamically for each year
+    const shortSemesterStart = new Date(`${semesterYear}-05-27`);
+    const longSemesterStart1 = new Date(`${semesterYear}-01-08`);
+    const longSemesterStart2 = new Date(`${semesterYear}-08-19`);
 
     const longSemesterEnd1 = new Date(longSemesterStart1);
-    longSemesterEnd1.setMonth(longSemesterEnd1.getMonth() + 4);  // End of long semester (4 months duration)
+    longSemesterEnd1.setMonth(longSemesterEnd1.getMonth() + 4);
 
     const longSemesterEnd2 = new Date(longSemesterStart2);
-    longSemesterEnd2.setMonth(longSemesterEnd2.getMonth() + 4);  // End of long semester (4 months duration)
+    longSemesterEnd2.setMonth(longSemesterEnd2.getMonth() + 4);
 
-    // Check if it's in the short or long semester based on the current date
-    if (now >= shortSemesterStart && now <= longSemesterStart1) {
-        return { type: 'short', weeks: 7 };  // Short semester (7 weeks)
-    } else if (
-        (now >= longSemesterStart1 && now <= longSemesterEnd1) || 
-        (now >= longSemesterStart2 && now <= longSemesterEnd2)
-    ) {
-        return { type: 'long', weeks: 14 };  // Long semester (14 weeks)
+    // Calculate the difference between current date and the start/end dates of each semester
+    const getDateDifference = (date) => Math.abs(now - date);
+
+    const shortSemesterDiff = getDateDifference(shortSemesterStart);
+    const longSemesterDiff1 = getDateDifference(longSemesterStart1);
+    const longSemesterDiff2 = getDateDifference(longSemesterStart2);
+
+    // Check if current date is within the range of each semester
+    const isInShortSemester = now >= shortSemesterStart && now <= longSemesterStart1;
+    const isInLongSemester1 = now >= longSemesterStart1 && now <= longSemesterEnd1;
+    const isInLongSemester2 = now >= longSemesterStart2 && now <= longSemesterEnd2;
+
+    // Determine the closest and active semester
+    if (isInShortSemester) {
+        return { type: 'short', weeks: 7 };
+    } else if (isInLongSemester1) {
+        return { type: 'long', weeks: 14 };
+    } else if (isInLongSemester2) {
+        return { type: 'long', weeks: 14 };
     } else {
-        return { type: 'unknown', weeks: 0 };  // Default, shouldn't happen during an active semester
+        // If no active semester, return the closest one
+        if (shortSemesterDiff <= longSemesterDiff1 && shortSemesterDiff <= longSemesterDiff2) {
+            return { type: 'short', weeks: 7 };
+        } else if (longSemesterDiff1 <= longSemesterDiff2) {
+            return { type: 'long', weeks: 14 };
+        } else {
+            return { type: 'long', weeks: 14 };
+        }
     }
 }
 
@@ -46,14 +75,12 @@ export async function deleteClassesSubCollectionBatch(subjectCode, batch) {
     const classesRef = collection(db, 'Subjects', subjectCode, 'Classes');
     const snapshot = await getDocs(classesRef);
 
-    if (snapshot.empty) {
-        console.log(`No documents found in /Subjects/${subjectCode}/Classes.`);
-    } else {
+    if (!snapshot.empty) {
         // Add each delete operation to the batch
         snapshot.docs.forEach(docSnapshot => {
             batch.delete(docSnapshot.ref);
         });
-    }
+    } 
 }
 
 // Function to delete the subject document after deleting the classes
@@ -177,6 +204,11 @@ export function displayTimetable(timetable) {
                 let cellContent = '';
                 subjects.forEach(subject => {
                     cellContent += `${subject.subject} (${subject.venue}) <br><br>`;
+
+                    if (!venueMap[subject.venue]) {
+                        venueMap[subject.venue] = [];
+                    }
+                    venueMap[subject.venue].push(subject.subject);
                 });
                 cell.innerHTML = cellContent;
             } else {
@@ -188,8 +220,8 @@ export function displayTimetable(timetable) {
 
 // Function to save the new timetable data
 export async function saveTimetableToFirestore(timetable) {
-    const semester = getSemester();  // Get the current semester
-    const numberOfWeeks = semester.weeks;  // Get the weeks based on the semester type
+    const semester = getSemester();
+    const numberOfWeeks = semester.weeks; 
 
     if (semester.type === 'unknown') {
         toastr.error('Error: Could not determine the semester.');
@@ -219,18 +251,25 @@ export async function saveTimetableToFirestore(timetable) {
                     // Create the sub-collection document name with the format 'date_timeSlot'
                     const classRef = doc(collection(subjectRef, 'Classes'), `${classDate}_${timeSlot}`);
 
-                    // Add the class to the batch
+                    let venue = '';
+                    Object.keys(venueMap).forEach(venueKey => {
+                        if (venueMap[venueKey].includes(subjectCode)) {
+                            venue = venueKey;
+                        }
+                    });
+
                     batch.set(classRef, {
-                        students: {},  // Placeholder for student information
-                        attendance: {},  // Placeholder for student information
+                        attendance: {},  // Placeholder for attendance information
                         week,
                         timeSlot,
-                        classDate
+                        classDate,
+                        venue
                     });
                 });
             }
         });
 
+        checkAndUpdateAllCalendars();
         await batch.commit(); 
     } catch (error) {
         throw error; 
@@ -241,23 +280,42 @@ export async function saveTimetableToFirestore(timetable) {
 export function getSemesterStartDate() {
     const now = new Date();
     const semester = getSemester(); // Get the current semester
+    const currentYear = now.getFullYear();
+    const nextYear = currentYear + 1;
+
+    // Determine the semester year based on whether it's December
+    const isDecember = now.getMonth() === 11;
+    const semesterYear = isDecember ? nextYear : currentYear;
+
+    // Define semester start dates
+    const shortSemesterStart = new Date(`${semesterYear}-05-27`);
+    const longSemesterStartJan = new Date(`${semesterYear}-01-08`);
+    const longSemesterStartAug = new Date(`${semesterYear}-08-19`);
+
+    // Define semester end dates (4 months after start)
+    const longSemesterEndJan = new Date(longSemesterStartJan);
+    longSemesterEndJan.setMonth(longSemesterEndJan.getMonth() + 4);
+
+    const longSemesterEndAug = new Date(longSemesterStartAug);
+    longSemesterEndAug.setMonth(longSemesterEndAug.getMonth() + 4);
 
     let semesterStartDate = null;
 
-    if (semester.type === 'short') {
-        // Short semester starts on May 27
-        semesterStartDate = new Date('2024-05-27');
-    } else if (semester.type === 'long') {
-        // Long semester starts on August 19 or January 8
-        const longSemesterStart1 = new Date('2024-08-19');
-        const longSemesterStart2 = new Date('2024-01-08');
+    // Check if the current date is within any semester
+    if (now >= longSemesterStartJan && now <= longSemesterEndJan) {
+        semesterStartDate = longSemesterStartJan;
+    } else if (now >= longSemesterStartAug && now <= longSemesterEndAug) {
+        semesterStartDate = longSemesterStartAug;
+    } else if (now < longSemesterStartJan) {
+        // If it's before the January semester
+        semesterStartDate = longSemesterStartJan;
+    } else if (now > longSemesterEndAug) {
+        // If it's after the August semester, move to next January semester
+        semesterStartDate = new Date(`${nextYear}-01-08`);
+    }
 
-        // Choose the correct start date depending on the current date
-        if (now >= longSemesterStart1 && now <= new Date(longSemesterStart1).setMonth(longSemesterStart1.getMonth() + 4)) {
-            semesterStartDate = longSemesterStart1;
-        } else if (now >= longSemesterStart2 && now <= new Date(longSemesterStart2).setMonth(longSemesterStart2.getMonth() + 4)) {
-            semesterStartDate = longSemesterStart2;
-        }
+    if (!semesterStartDate) {
+        console.error("Semester start date is null.");
     }
 
     return semesterStartDate;
@@ -276,19 +334,29 @@ export function getClassDateForWeek(startDate, classDay, weekNumber) {
     // Start with the first day of the semester
     const classDate = new Date(startDate);
 
+    // Ensure the provided class day is valid
+    if (!dayOfWeekMap[classDay]) {
+        return null;
+    }
+
     // Find the first occurrence of the given class day
-    let dayOffset = (dayOfWeekMap[classDay] - classDate.getDay() + 7) % 7;
+    const currentDay = classDate.getDay();
+    const targetDay = dayOfWeekMap[classDay];
+    const dayOffset = (targetDay - currentDay + 7) % 7; // Offset to the target day of the week
     classDate.setDate(classDate.getDate() + dayOffset);
 
     // Add the number of weeks to the date to get the specific week
-    classDate.setDate(classDate.getDate() + (weekNumber - 1) * 7);
+    const additionalDays = (weekNumber - 1) * 7;
+    classDate.setDate(classDate.getDate() + additionalDays);
 
     // Format the date to 'YYYY-MM-DD' (for example, '2024-08-19')
     const year = classDate.getFullYear();
-    const month = (classDate.getMonth() + 1).toString().padStart(2, '0');  // Month is 0-based
+    const month = (classDate.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-based
     const day = classDate.getDate().toString().padStart(2, '0');
 
-    return `${year}-${month}-${day}`;
+    const formattedDate = `${year}-${month}-${day}`;
+
+    return formattedDate;
 }
 
 // Function to process timetable data from the UI
@@ -317,6 +385,45 @@ export function processTimetableDataFromUI() {
     }
 
     return timetable;
+}
+
+// Function to fetch all students' UID from Firestore
+async function getAllStudents() {
+    const studentsSnapshot = await getDocs(collection(db, 'Students'));
+    const students = [];
+    studentsSnapshot.forEach(doc => {
+        students.push(doc.id); // Store each student's UID (document ID)
+    });
+    return students;
+}
+
+// Function to check if the .ics file exists for a student in Firebase Storage
+async function checkAndUpdateAllCalendars() {
+    try {
+        const students = await getAllStudents(); // Get all students' UIDs
+
+        for (const uid of students) {
+            const storageRef = ref(storage, `calendars/${uid}.ics`);
+
+            try {
+                // Check if the .ics file exists for the student in Firebase Storage
+                await getDownloadURL(storageRef); // This will throw an error if the file doesn't exist
+
+                await checkAndUpdateCalendar(uid); // Update the calendar
+            } catch (error) {
+                if (error.code === 'storage/object-not-found') {
+                    await checkAndUpdateCalendar(uid); // Create new calendar if no file exists
+                } else {
+                    console.error('Error checking file in Firebase Storage:', error);
+                }
+            }
+        }
+
+        console.log('All calendars checked and updated.');
+
+    } catch (error) {
+        console.error('Error fetching students:', error);
+    }
 }
 
 // Modify the existing DOMContentLoaded listener to implement the delete functionality

@@ -47,8 +47,12 @@
 
             try {
                 const userCredential = await handleLogin(email, password);
-                toastr.success('Login successful! Redirecting to profile...');
-                window.location.href = 'Profile.html';
+                toastr.success('Login successful!');
+                if (email === "admin@help.edu.my") {
+                    window.location.href = 'timetable.html';
+                }else{
+                    window.location.href = 'Profile.html';
+                }
             } catch (error) {
                 toastr.warning('Error logging in: ' + error.message);
             }
