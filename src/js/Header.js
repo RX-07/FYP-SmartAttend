@@ -68,7 +68,7 @@ function loadNavBar(userRole) {
         navContent = `
             <a href="subjectApprove.html">Subject Enrolment Review</a>
             <a href="timetable.html">Class Schedule Management</a>
-            <a href="#">MC Review</a>
+            <a href="MCapproval.html">MC Review</a>
             <button class="btn logout">Log Out</button>
         `;
     } else if (userRole === "student-logged-out" || userRole === "admin-logged-out") {
