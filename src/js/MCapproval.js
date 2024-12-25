@@ -1,11 +1,12 @@
-import { getFirestore, collection, onSnapshot, doc, updateDoc, getDoc } from './FirebaseConfig.js';
+import { doc, updateDoc, getFirestore, collection, onSnapshot, getDoc } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
-toastr.options.positionClass = 'toast-bottom-right'; 
+toastr.options.positionClass = 'toast-bottom-right';
 
 const db = getFirestore();
 
+// Fetch and display submitted medical certificates
 export function fetchSubmittedMC() {
     const mcCollection = collection(db, "MC");
 
@@ -15,32 +16,39 @@ export function fetchSubmittedMC() {
 
         for (const mcDoc of snapshot.docs) {
             const mcData = mcDoc.data();
-            const mcID = mcDoc.id; // Get the document ID (MC ID)
+            const mcID = mcDoc.id; // Document ID (User ID)
 
-            if (mcData.status === "pending") {
+            if (mcData.submittedMC) {
+                const submittedMC = mcData.submittedMC;
 
-                const studentDocRef = doc(db, "Students", mcID);
-                const studentDoc = await getDoc(studentDocRef);
+                for (const [mcKey, mcDetails] of Object.entries(submittedMC)) {
+                    if (mcDetails.status === "Pending") {
+                        // Fetch student details
+                        const studentDocRef = doc(db, "MC", mcID);
+                        const studentDoc = await getDoc(studentDocRef);
 
-                let studentID = '';
-                if (studentDoc.exists()) {
-                    studentID = studentDoc.data().studentID;
+                        let studentID = '';
+                        if (studentDoc.exists()) {
+                            studentID = studentDoc.data().studentID;
+                        }
+
+                        // Create a row for each pending MC
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${studentID}</td>
+                            <td>${mcDetails.reason}</td>
+                            <td>${mcDetails.note || 'N/A'}</td>
+                            <td>${mcDetails.submittedDate}</td>
+                            <td>
+                                <div class="button-container">
+                                    <button class="approve-button" data-mc-id="${mcID}" data-mc-key="${mcKey}">Approve</button>
+                                    <button class="reject-button" data-mc-id="${mcID}" data-mc-key="${mcKey}">Reject</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
                 }
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${studentID}</td>
-                    <td>${mcData.reason}</td>
-                    <td>${mcData.note || 'N/A'}</td>
-                    <td>${mcData.submitted_date.toDate().toLocaleString()}</td>
-                    <td>
-                        <div class="button-container">
-                            <button class="approve-button" data-mc-id="${mcID}">Approve</button>
-                            <button class="reject-button" data-mc-id="${mcID}">Reject</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
             }
         }
 
@@ -57,17 +65,18 @@ export function fetchSubmittedMC() {
     });
 }
 
-// Function to handle the approval of MC
+// Handle approval of a medical certificate
 export async function handleApprove(event) {
     const mcID = event.target.getAttribute('data-mc-id');
+    const mcKey = event.target.getAttribute('data-mc-key');
 
-    if (mcID) {
+    if (mcID && mcKey) {
         const mcDocRef = doc(db, "MC", mcID);
 
         try {
-            // Update the status of the MC document in Firestore
+            // Update the status of the specific MC
             await updateDoc(mcDocRef, {
-                status: "approved"
+                [`submittedMC.${mcKey}.status`]: "Approved"
             });
             toastr.success("Medical Certificate approved!");
         } catch (error) {
@@ -77,17 +86,18 @@ export async function handleApprove(event) {
     }
 }
 
-// Function to handle the rejection of MC
+// Handle rejection of a medical certificate
 export async function handleReject(event) {
     const mcID = event.target.getAttribute('data-mc-id');
+    const mcKey = event.target.getAttribute('data-mc-key');
 
-    if (mcID) {
+    if (mcID && mcKey) {
         const mcDocRef = doc(db, "MC", mcID);
 
         try {
-            // Update the status of the MC document in Firestore
+            // Update the status of the specific MC
             await updateDoc(mcDocRef, {
-                status: "rejected"
+                [`submittedMC.${mcKey}.status`]: "Rejected"
             });
             toastr.success("Medical Certificate rejected!");
         } catch (error) {
