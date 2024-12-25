@@ -1,4 +1,4 @@
-import { auth, db, doc, getDoc, updateDoc, storage, ref, deleteObject, uploadBytes, getDownloadURL } from './FirebaseConfig.js';
+import { auth, db, doc, getDoc, updateDoc, storage, ref, deleteObject, uploadBytes, getDownloadURL, collection, onSnapshot } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
@@ -24,6 +24,10 @@ async function fetchProfileData(userRef) {
             const userData = docSnap.data();
             displayProfileData(userData);
             displayAttendanceOverview(userData);
+
+            // Fetch and display medical certificates
+            const medicalCertificates = userData.medicalCertificates || []; // If medicalCertificates doesn't exist, use an empty array
+            displayMedicalCertificates(medicalCertificates);
         } else {
             console.log('No such document!');
         }
@@ -111,19 +115,35 @@ function displayAttendanceOverview(data) {
 }
 
 // Display Medical Certificates
-function displayMedicalCertificates(certificates) {
-    const mcTableBody = document.querySelector('.mc-submission .styled-table tbody');
-    mcTableBody.innerHTML = '';
+function displayMedicalCertificates() {
+    // Fetch the student's medical certificates from the 'Students/{uid}/MedicalCertificates' subcollection
+    const mcCollection = collection(db, "Students", uid, "MedicalCertificates");
 
-    certificates.forEach(cert => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${cert.date}</td>
-            <td>${cert.status}</td>
-            <td>${cert.mcSubmitted ? 'Yes' : 'No'}</td>
-            <td>${cert.notes}</td>
-        `;
-        mcTableBody.appendChild(row);
+    onSnapshot(mcCollection, async (snapshot) => {
+        const tbody = document.querySelector('.mc-submission tbody');
+        tbody.innerHTML = ''; // Clear table
+
+        // Fetch the student's ID only once
+        const studentDocRef = doc(db, "Students", uid);
+        const studentDoc = await getDoc(studentDocRef);
+        let studentID = '';
+        if (studentDoc.exists()) {
+            studentID = studentDoc.data().studentID;
+        }
+
+        // Now display medical certificates for the student
+        snapshot.docs.forEach((mcDoc) => {
+            const mcData = mcDoc.data();
+
+            // Create a row for each certificate
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${mcData.reason}</td>
+                <td>${mcData.status || 'N/A'}</td>
+                <td>${mcData.submitted_date.toDate().toLocaleString()}</td>
+            `;
+            tbody.appendChild(row);
+        });
     });
 }
 
