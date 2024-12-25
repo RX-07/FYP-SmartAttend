@@ -1,64 +1,81 @@
-import { auth, db, storage, doc, ref, uploadBytes, getDownloadURL, updateDoc } from './FirebaseConfig.js';
+import { auth, db, doc, getDoc, setDoc, uploadBytes, getDownloadURL, ref, storage } from './FirebaseConfig.js';
+import toastr from 'toastr';
+import 'toastr/build/toastr.min.css';
+
+toastr.options.positionClass = 'toast-bottom-right'; 
+
+let uid; 
 
 auth.onAuthStateChanged((authUser) => {
     if (authUser) {
         uid = authUser.uid;
-        fetchEnrolledSubjects(uid); 
     } else {
-        console.log('No user is currently logged in');
-    }
+        console.log('No user is currently logged in');
+    }
 });
 
-// Function to handle form submission and add medical certificate data to the "medicalCertificates" map
-const handleFormSubmit = async (event) => {
+export async function submitMC(event) {
     event.preventDefault();
 
     const fileInput = document.getElementById('file');
-    const reasonInput = document.getElementById('reason');
-    const noteInput = document.getElementById('note');
+    const reason = document.getElementById('reason').value.trim();
+    const note = document.getElementById('note').value.trim();
+    const file = fileInput.files[0];
 
-    if (!fileInput.files.length) {
-        alert('Please select a file to upload.');
+    if (!file || !reason || !uid) {
+        toastr.warning("Please upload a file and provide a reason for your sick leave.");
         return;
     }
 
-    const file = fileInput.files[0];
-    const reason = reasonInput.value;
-    const note = noteInput.value;
+    const mcDocRef = doc(db, "MC", uid);        
 
     try {
-        const uid = auth.currentUser.uid;  // Get the logged-in user's UID
+        // Fetch existing MC data to determine the current count
+        const mcDoc = await getDoc(mcDocRef);
+        let mcNumber = 1; // Default to 1 if no MCs exist yet
 
-        // Step 1: Reference the user's document in the "Students" collection
-        const mcDocRef = doc(db, "MC", uid);
+        if (mcDoc.exists()) {
+            const submittedMC = mcDoc.data().submittedMC || {};
+            const existingKeys = Object.keys(submittedMC);
 
-        // Step 2: Upload the file to Firebase Storage
-        const fileName = `${uid}_medical_certificate_${Date.now()}`;
-        const storageRef = ref(storage, `mc/${fileName}`);
+            // Find the highest mc number in the existing keys
+            existingKeys.forEach((key) => {
+                const match = key.match(/^MC(\d+)$/); // Match the pattern "mc + number"
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num >= mcNumber) mcNumber = num + 1; // Increment to the next number
+                }
+            });
+        }
 
-        // Upload the file
-        const uploadResult = await uploadBytes(storageRef, file);  // Use uploadBytes for direct upload
+        const mcKey = `MC${mcNumber}`; // New key for this submission
+        const fileRef = ref(storage, `mc/${uid}/${file.name}`);
+        await uploadBytes(fileRef, file);
 
-        // Step 3: Get the file URL after the upload completes
-        const fileURL = await getDownloadURL(uploadResult.ref);
+        const fileURL = await getDownloadURL(fileRef);
 
-        // Step 4: Prepare the medical certificate data (map)
-        const currentDate = new Date().toString();  // Use ISO string for unique key
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
 
-        // Step 5: Update the "medicalCertificates" map in the user's document
-        await updateDoc(mcDocRef, {
-            [currentDate]: {
-                file: fileURL,
-                reason: reason,
-                note: note,
-                status: "Pending"
+        // Save the new MC record
+        await setDoc(mcDocRef, {
+            submittedMC: {
+                [mcKey]: {
+                    file: fileURL,
+                    reason: reason,
+                    note: note,
+                    status: "Pending",
+                    submittedDate: formattedDate
+                }
             }
-        });
-    } catch (error) {
-        console.error("Error submitting MC:", error);
-        alert("An error occurred while submitting the Medical Certificate. Please try again.");
-    }
-};
+        }, { merge: true }); // Merge ensures existing data is not overwritten
 
-// Add event listener to the form
-document.getElementById('mcForm').addEventListener('submit', handleFormSubmit);
+        toastr.success("Medical Certificate submitted successfully!");
+        document.getElementById('mcForm').reset();
+    } catch (error) {
+        console.error("Error submitting Medical Certificate:", error);
+        toastr.error("Failed to submit Medical Certificate. Please try again.");
+    }
+}
+
+document.getElementById('mcForm').addEventListener('submit', submitMC);
