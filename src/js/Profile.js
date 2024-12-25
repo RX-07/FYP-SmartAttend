@@ -132,14 +132,12 @@ async function displayMedicalCertificates() {
 
                 for (const [mcKey, mcDetails] of Object.entries(submittedMC)) {
                     if (mcDetails.status) {
-                        // Fetch the file URL from Firestore data
-                        const fileURL = mcDetails.file; // Use the file URL stored in Firestore
 
                         // Create a row for each MC
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${mcDetails.reason}</td>
-                            <td><a href="${fileURL}" target="_blank">View File</a></td>
+                            <td><a href="${mcDetails.file}" target="_blank">View File</a></td>
                             <td>${mcDetails.status}</td>
                             <td>${mcDetails.submittedDate}</td>
                         `;
