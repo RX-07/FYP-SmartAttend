@@ -1,10 +1,8 @@
-import { getFirestore, collection, onSnapshot, doc, updateDoc } from "./FirebaseConfig.js";
+import { db, collection, onSnapshot, doc, updateDoc } from "./FirebaseConfig.js";
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
 toastr.options.positionClass = 'toast-bottom-right'; 
-
-const db = getFirestore();
 
 export function fetchSubmittedSubjects() {
     const studentsCollection = collection(db, "Students");

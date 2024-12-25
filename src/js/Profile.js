@@ -10,6 +10,7 @@ auth.onAuthStateChanged((authUser) => {
     if (authUser) {
         uid = authUser.uid;
         fetchProfileData(uid); 
+        displayMedicalCertificates(uid);
     } else {
         console.log('No user is currently logged in');
     }
@@ -115,36 +116,43 @@ function displayAttendanceOverview(data) {
 }
 
 // Display Medical Certificates
-function displayMedicalCertificates() {
-    // Fetch the student's medical certificates from the 'Students/{uid}/MedicalCertificates' subcollection
-    const mcCollection = collection(db, "Students", uid, "MedicalCertificates");
-
-    onSnapshot(mcCollection, async (snapshot) => {
+async function displayMedicalCertificates() {
+    const mcDocRef = doc(db, "MC", uid);
+    try {
+        const mcDoc = await getDoc(mcDocRef); // Fetch the logged-in user's MC document
         const tbody = document.querySelector('.mc-submission tbody');
         tbody.innerHTML = ''; // Clear table
 
-        // Fetch the student's ID only once
-        const studentDocRef = doc(db, "Students", uid);
-        const studentDoc = await getDoc(studentDocRef);
-        let studentID = '';
-        if (studentDoc.exists()) {
-            studentID = studentDoc.data().studentID;
-        }
 
-        // Now display medical certificates for the student
-        snapshot.docs.forEach((mcDoc) => {
+        if (mcDoc.exists()) {
             const mcData = mcDoc.data();
 
-            // Create a row for each certificate
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${mcData.reason}</td>
-                <td>${mcData.status || 'N/A'}</td>
-                <td>${mcData.submitted_date.toDate().toLocaleString()}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    });
+            if (mcData.submittedMC) {
+                const submittedMC = mcData.submittedMC;
+
+                for (const [mcKey, mcDetails] of Object.entries(submittedMC)) {
+                    if (mcDetails.status) {
+                        // Fetch the file URL from Firestore data
+                        const fileURL = mcDetails.file; // Use the file URL stored in Firestore
+
+                        // Create a row for each MC
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${mcDetails.reason}</td>
+                            <td><a href="${fileURL}" target="_blank">View File</a></td>
+                            <td>${mcDetails.status}</td>
+                            <td>${mcDetails.submittedDate}</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                }
+            }
+        } else {
+            console.log("No medical certificate data found for the user.");
+        }
+    } catch (error) {
+        console.error("Error fetching medical certificates:", error);
+    }
 }
 
 // Modal controls

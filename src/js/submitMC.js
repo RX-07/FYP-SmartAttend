@@ -19,7 +19,6 @@ export async function submitMC(event) {
 
     const fileInput = document.getElementById('file');
     const reason = document.getElementById('reason').value.trim();
-    const note = document.getElementById('note').value.trim();
     const file = fileInput.files[0];
 
     if (!file || !reason || !uid) {
@@ -63,7 +62,6 @@ export async function submitMC(event) {
                 [mcKey]: {
                     file: fileURL,
                     reason: reason,
-                    note: note,
                     status: "Pending",
                     submittedDate: formattedDate
                 }
