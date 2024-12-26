@@ -101,15 +101,43 @@ function displayProfileData(data) {
     }
 }
 
+// Fetch the count of submitted medical certificates for the logged-in user
+async function fetchMedicalCertificateCount(userId) {
+    try {
+        const mcDocRef = doc(db, "MC", userId);
+        const mcDoc = await getDoc(mcDocRef);
+
+        if (mcDoc.exists()) {
+            const mcData = mcDoc.data();
+            if (mcData.submittedMC) {
+                // Filter for only valid MCs
+                return Object.values(mcData.submittedMC).filter(mc => mc.status).length;
+            }
+        }
+        return 0; // Return 0 if no data or no valid MCs
+    } catch (error) {
+        console.error("Error fetching MC data:", error);
+        throw error;
+    }
+}
+
 // Display Attendance Overview
 function displayAttendanceOverview(data) {
-    const attendance = data.attendance;
+    const attendance = data.attendance || {};
 
     // Update fields in attendance overview
-    document.querySelector('#total-classes-attended').innerHTML = `<i class="fas fa-check-circle"></i> ${attendance.totalClassesAttended}/40`;
-    document.querySelector('#absences').innerHTML = `<i class="fas fa-times-circle"></i> ${attendance.absences}`;
-    document.querySelector('#mc-submitted').innerHTML = `<i class="fas fa-file-medical"></i> ${attendance.medicalCertificateSubmitted}`;
-    document.querySelector('#upcoming-classes').innerHTML = `<i class="fas fa-calendar-alt"></i> ${attendance.upcomingClasses}`;
+    document.querySelector('#total-classes-attended').innerHTML = `<i class="fas fa-check-circle"></i> ${attendance.totalClassesAttended || 0}/40`;
+    document.querySelector('#absences').innerHTML = `<i class="fas fa-times-circle"></i> ${attendance.absences || 0}`;
+    document.querySelector('#upcoming-classes').innerHTML = `<i class="fas fa-calendar-alt"></i> ${attendance.upcomingClasses || 0}`;
+
+    // Fetch and calculate dynamic MC submission count
+    fetchMedicalCertificateCount(uid)
+        .then(mcCount => {
+            document.querySelector('#mc-submitted').innerHTML = `<i class="fas fa-file-medical"></i> ${mcCount}`;
+        })
+        .catch(error => {
+            console.error("Error fetching MC submission count:", error);
+        });
 
     // Medical certificate submission table
     displayMedicalCertificates(data.medicalCertificates);
