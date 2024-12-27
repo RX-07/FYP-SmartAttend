@@ -25,10 +25,6 @@ async function fetchProfileData(userRef) {
             const userData = docSnap.data();
             displayProfileData(userData);
             displayAttendanceOverview(userData);
-
-            // Fetch and display medical certificates
-            const medicalCertificates = userData.medicalCertificates || []; // If medicalCertificates doesn't exist, use an empty array
-            displayMedicalCertificates(medicalCertificates);
         } else {
             console.log('No such document!');
         }
@@ -138,9 +134,6 @@ function displayAttendanceOverview(data) {
         .catch(error => {
             console.error("Error fetching MC submission count:", error);
         });
-
-    // Medical certificate submission table
-    displayMedicalCertificates(data.medicalCertificates);
 }
 
 // Display Medical Certificates
