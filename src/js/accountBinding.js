@@ -21,10 +21,11 @@ export async function bindDeviceToAccount() {
         // Check if the deviceId is already associated with another account
         const deviceDocRef = doc(db, 'Devices', deviceId);
         const deviceDoc = await getDoc(deviceDocRef);
-
         if (deviceDoc.exists()) {
-            toastr.warning('This device is already bound to another account.');
-            return;
+            setTimeout(() => {
+                toastr.warning('This device is already bound to another account.');
+                return;
+            }, 5000);
         }
 
         // Proceed with binding if the device is not already bound
@@ -59,18 +60,59 @@ export function validateDeviceId() {
             const uid = user.uid;
             const deviceId = getDeviceIdentifier();
             const userDocRef = doc(db, 'Students', uid);
+            const deviceDocRef = doc(db, 'Devices', deviceId);
 
             try {
-                const userDoc = await getDoc(userDocRef);
+                // Fetch both documents concurrently
+                const [deviceDoc, userDoc] = await Promise.all([
+                    getDoc(deviceDocRef),
+                    getDoc(userDocRef),
+                ]);
 
+                if (deviceDoc.exists()) {
+                    const deviceData = deviceDoc.data();
+
+                    // Check if the device is already bound to this user
+                    if (deviceData.uid === uid) {
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            const storedDeviceId = userData.deviceInfo?.deviceId;
+
+                            if (storedDeviceId === deviceId) {
+                                console.log('Device is already bound and consistent for this user.');
+                                return;
+                            } else {
+                                toastr.warning(
+                                    'Device ID mismatch. Please contact support or rebind your device.'
+                                );
+                                promptChangeDeviceOrSignOut(userDocRef, deviceId, userData.deviceInfo?.lastBound);
+                                return;
+                            }
+                        } else {
+                            console.error('User document not found.');
+                            return;
+                        }
+                    } else {
+                        toastr.warning(
+                            'This device is bound to another account. Please use a different device or sign out.'
+                        );
+
+                        setTimeout(() => {
+                            auth.signOut();
+                            window.location.href = 'index.html';
+                        }, 5000); 
+                    }
+                }
+
+                // If the deviceDoc does not exist, fallback to user document check
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    const storedDeviceId = data.deviceId;
+                    const storedDeviceId = data.deviceInfo?.deviceId;
 
                     if (!storedDeviceId) {
                         promptBindDevice();
                     } else if (storedDeviceId !== deviceId) {
-                        promptChangeDeviceOrSignOut(userDocRef, deviceId, data.lastBound);
+                        promptChangeDeviceOrSignOut(userDocRef, deviceId, data.deviceInfo?.lastBound);
                     }
                 } else {
                     console.error('User document not found.');
@@ -87,7 +129,10 @@ function promptBindDevice() {
         bindDeviceToAccount();
     } else {
         toastr.warning('You must bind this account to a device to proceed.');
-        auth.signOut();
+        setTimeout(() => {
+            auth.signOut();
+            window.location.href = 'index.html';
+        }, 5000);
     }
 }
 
@@ -98,8 +143,7 @@ async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
 
     if (now - lastBoundDate < cooldownTime) {
         const remainingDays = Math.ceil((cooldownTime - (now - lastBoundDate)) / (24 * 60 * 60 * 1000));
-        toastr.warning(`You can only change devices once every 7 days. Please try again in ${remainingDays} days.`);
-        return;
+        toastr.info(`You can only change devices once every 7 days. Please try again in ${remainingDays} days.`);
     }
 
     if (confirm('This account is bound to another device. Do you want to change the bound device?')) {
@@ -129,10 +173,12 @@ async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
         }
     } else {
         toastr.info('Sign out initiated.');
-        auth.signOut();
+        setTimeout(() => {
+            auth.signOut();
+            window.location.href = 'index.html';
+        }, 5000);
     }
 }
-
 
 function getDeviceIdentifier() {
     let deviceId = localStorage.getItem('deviceId');
@@ -156,3 +202,5 @@ function getDeviceType() {
     if (userAgent.includes('windows') || userAgent.includes('macintosh')) return 'Desktop';
     return 'Unknown';
 }
+
+validateDeviceId();
