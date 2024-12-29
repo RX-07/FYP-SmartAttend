@@ -136,7 +136,6 @@ function displayAttendanceOverview(data) {
         });
 }
 
-// Display Medical Certificates
 async function displayMedicalCertificates() {
     const mcDocRef = doc(db, "MC", uid);
     try {
@@ -151,20 +150,27 @@ async function displayMedicalCertificates() {
             if (mcData.submittedMC) {
                 const submittedMC = mcData.submittedMC;
 
-                for (const [mcKey, mcDetails] of Object.entries(submittedMC)) {
-                    if (mcDetails.status) {
+                const sortedMCEntries = Object.entries(submittedMC)
+                    .map(([mcKey, mcDetails]) => {
+                        const [day, month, year] = mcDetails.submittedDate.split("-");
+                        const isoDate = `${year}-${month}-${day}`;
+                        return { mcKey, ...mcDetails, parsedDate: new Date(isoDate) };
+                    })
+                    .sort((a, b) => b.parsedDate - a.parsedDate);
 
-                        // Create a row for each MC
+                // Render sorted entries
+                sortedMCEntries.forEach(mc => {
+                    if (mc.status) {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${mcDetails.reason}</td>
-                            <td><a href="${mcDetails.file}" target="_blank">View File</a></td>
-                            <td>${mcDetails.status}</td>
-                            <td>${mcDetails.submittedDate}</td>
+                            <td>${mc.reason}</td>
+                            <td><a href="${mc.file}" target="_blank">View File</a></td>
+                            <td>${mc.status}</td>
+                            <td>${mc.submittedDate}</td>
                         `;
                         tbody.appendChild(row);
                     }
-                }
+                });
             }
         } else {
             console.log("No medical certificate data found for the user.");

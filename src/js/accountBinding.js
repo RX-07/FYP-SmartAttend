@@ -25,29 +25,28 @@ export async function bindDeviceToAccount() {
             setTimeout(() => {
                 toastr.warning('This device is already bound to another account.');
                 return;
-            }, 5000);
-        }
+            }, 6000);
+        } else {
+            // Proceed with binding if the device is not already bound
+            await updateDoc(userDocRef, { 
+                deviceInfo: {
+                    deviceId, 
+                    deviceName, 
+                    deviceType, 
+                    lastBound: new Date().toISOString() // Record binding timestamp
+                }
+            });
 
-        // Proceed with binding if the device is not already bound
-        await updateDoc(userDocRef, { 
-            deviceInfo: {
+            // Create a new document in a 'Devices' collection to track device bindings
+            await setDoc(deviceDocRef, { 
+                uid, 
                 deviceId, 
                 deviceName, 
                 deviceType, 
-                lastBound: new Date().toISOString() // Record binding timestamp
-            }
-        });
-
-        // Create a new document in a 'Devices' collection to track device bindings
-        await setDoc(deviceDocRef, { 
-            uid, 
-            deviceId, 
-            deviceName, 
-            deviceType, 
-            boundAt: new Date().toISOString() 
-        });
-
-        toastr.success('Account successfully bound to this device.');
+                boundAt: new Date().toISOString() 
+            });
+            toastr.success('Account successfully bound to this device.');
+        }
     } catch (error) {
         console.error('Error binding account to device:', error);
         toastr.error('Error binding account to device. Please try again later.');
