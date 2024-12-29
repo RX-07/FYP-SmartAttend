@@ -134,6 +134,7 @@ function displayAttendanceOverview(data) {
         .catch(error => {
             console.error("Error fetching MC submission count:", error);
         });
+
 }
 
 // Display Medical Certificates
@@ -144,16 +145,20 @@ async function displayMedicalCertificates() {
         const tbody = document.querySelector('.mc-submission tbody');
         tbody.innerHTML = ''; // Clear table
 
-
         if (mcDoc.exists()) {
             const mcData = mcDoc.data();
 
             if (mcData.submittedMC) {
                 const submittedMC = mcData.submittedMC;
 
-                for (const [mcKey, mcDetails] of Object.entries(submittedMC)) {
-                    if (mcDetails.status) {
+                // Convert to an array and sort by date in descending order
+                const sortedMC = Object.entries(submittedMC).sort((a, b) => {
+                    return new Date(b[1].submittedDate) - new Date(a[1].submittedDate);
+                });
 
+                // Render sorted data
+                sortedMC.forEach(([mcKey, mcDetails]) => {
+                    if (mcDetails.status) {
                         // Create a row for each MC
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -164,7 +169,7 @@ async function displayMedicalCertificates() {
                         `;
                         tbody.appendChild(row);
                     }
-                }
+                });
             }
         } else {
             console.log("No medical certificate data found for the user.");
@@ -173,6 +178,7 @@ async function displayMedicalCertificates() {
         console.error("Error fetching medical certificates:", error);
     }
 }
+
 
 // Modal controls
 const editModal = document.getElementById("edit-modal");
