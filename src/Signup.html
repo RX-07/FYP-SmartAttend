@@ -43,6 +43,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="module">
         import { handleSignUp } from './js/SignupConfig.js';
+        import toastr from 'toastr';
+        import 'toastr/build/toastr.min.css';
     
         const signupForm = document.getElementById('signupForm');
         signupForm.addEventListener('submit', async (e) => {
