@@ -134,6 +134,7 @@ function displayAttendanceOverview(data) {
         .catch(error => {
             console.error("Error fetching MC submission count:", error);
         });
+
 }
 
 async function displayMedicalCertificates() {
@@ -143,12 +144,12 @@ async function displayMedicalCertificates() {
         const tbody = document.querySelector('.mc-submission tbody');
         tbody.innerHTML = ''; // Clear table
 
-
         if (mcDoc.exists()) {
             const mcData = mcDoc.data();
 
             if (mcData.submittedMC) {
                 const submittedMC = mcData.submittedMC;
+
 
                 const sortedMCEntries = Object.entries(submittedMC)
                     .map(([mcKey, mcDetails]) => {
@@ -161,6 +162,8 @@ async function displayMedicalCertificates() {
                 // Render sorted entries
                 sortedMCEntries.forEach(mc => {
                     if (mc.status) {
+                        // Create a row for each MC
+
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${mc.reason}</td>
@@ -179,6 +182,7 @@ async function displayMedicalCertificates() {
         console.error("Error fetching medical certificates:", error);
     }
 }
+
 
 // Modal controls
 const editModal = document.getElementById("edit-modal");
