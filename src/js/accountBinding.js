@@ -94,15 +94,14 @@ export function validateDeviceId() {
                     } else {
                         toastr.warning(
                             'This device is bound to another account. Please use a different device or sign out.'
-                        );
+                        ); 
 
                         setTimeout(() => {
                             auth.signOut();
                             window.location.href = 'index.html';
-                        }, 5000); 
+                        }, 6000); 
                     }
-                }
-
+                } 
                 // If the deviceDoc does not exist, fallback to user document check
                 if (userDoc.exists()) {
                     const data = userDoc.data();
@@ -131,7 +130,7 @@ function promptBindDevice() {
         setTimeout(() => {
             auth.signOut();
             window.location.href = 'index.html';
-        }, 5000);
+        }, 6000);
     }
 }
 
@@ -175,7 +174,7 @@ async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
         setTimeout(() => {
             auth.signOut();
             window.location.href = 'index.html';
-        }, 5000);
+        }, 6000);
     }
 }
 
