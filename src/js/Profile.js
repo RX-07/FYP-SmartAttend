@@ -1,4 +1,4 @@
-import { auth, db, doc, getDoc, updateDoc, storage, ref, deleteObject, uploadBytes, getDownloadURL, collection, onSnapshot } from './FirebaseConfig.js';
+import { auth, db, doc, getDoc, getDocs, updateDoc, storage, ref, deleteObject, uploadBytes, getDownloadURL, collection, onSnapshot } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
@@ -11,6 +11,7 @@ auth.onAuthStateChanged((authUser) => {
         uid = authUser.uid;
         fetchProfileData(uid); 
         displayMedicalCertificates(uid);
+        displaySubjectOverview(uid);
     } else {
         console.log('No user is currently logged in');
     }
@@ -95,46 +96,6 @@ function displayProfileData(data) {
     } else {
         profileImg.src = 'Images/Profile.jpeg'; // Default image
     }
-}
-
-// Fetch the count of submitted medical certificates for the logged-in user
-async function fetchMedicalCertificateCount(userId) {
-    try {
-        const mcDocRef = doc(db, "MC", userId);
-        const mcDoc = await getDoc(mcDocRef);
-
-        if (mcDoc.exists()) {
-            const mcData = mcDoc.data();
-            if (mcData.submittedMC) {
-                // Filter for only valid MCs
-                return Object.values(mcData.submittedMC).filter(mc => mc.status).length;
-            }
-        }
-        return 0; // Return 0 if no data or no valid MCs
-    } catch (error) {
-        console.error("Error fetching MC data:", error);
-        throw error;
-    }
-}
-
-// Display Attendance Overview
-function displayAttendanceOverview(data) {
-    const attendance = data.attendance || {};
-
-    // Update fields in attendance overview
-    document.querySelector('#total-classes-attended').innerHTML = `<i class="fas fa-check-circle"></i> ${attendance.totalClassesAttended || 0}/40`;
-    document.querySelector('#absences').innerHTML = `<i class="fas fa-times-circle"></i> ${attendance.absences || 0}`;
-    document.querySelector('#upcoming-classes').innerHTML = `<i class="fas fa-calendar-alt"></i> ${attendance.upcomingClasses || 0}`;
-
-    // Fetch and calculate dynamic MC submission count
-    fetchMedicalCertificateCount(uid)
-        .then(mcCount => {
-            document.querySelector('#mc-submitted').innerHTML = `<i class="fas fa-file-medical"></i> ${mcCount}`;
-        })
-        .catch(error => {
-            console.error("Error fetching MC submission count:", error);
-        });
-
 }
 
 async function displayMedicalCertificates() {
@@ -228,3 +189,122 @@ editProfileForm.addEventListener("submit", async (event) => {
     // Close modal
     editModal.style.display = "none";
 });
+
+// Fetch approved subjects for logged-in user
+export async function fetchSubjectOverview(uid) {
+    try {
+        const studentDoc = await getDoc(doc(db, "Students", uid));
+        if (studentDoc.exists()) {
+            const enrolledSubjects = studentDoc.data().enrolledSubjects || {};
+            const approvedSubjects = Object.entries(enrolledSubjects)
+                .filter(([_, subjectData]) => subjectData.status === "Enrolled")
+                .map(([subjectId, subjectData]) => ({
+                    id: subjectId,
+                    ...subjectData
+                }));
+            return approvedSubjects;
+        } else {
+            toastr.error("Student document not found");
+            return [];
+        }
+    } catch (error) {
+        toastr.error("Error fetching approved subjects:", error);
+        return [];
+    }
+}
+
+export async function getAttendanceData(uid, subjectId) {
+    const classesRef = collection(db, `Subjects/${subjectId}/Classes`);
+    let totalClasses = 0;
+    let totalAttendedClasses = 0;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    try {
+        const querySnapshot = await getDocs(classesRef);
+
+        querySnapshot.forEach((doc) => {
+            const classId = doc.id;
+            const classDateStr = classId.split("_")[0]; 
+            const classDate = new Date(classDateStr);
+
+            if (classDate <= today) { 
+                totalClasses++;
+
+                const attendanceData = doc.data().attendance;
+                if (attendanceData && attendanceData[uid]) {
+                    totalAttendedClasses++;
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching attendance data:", error);
+    }
+
+    return { totalClasses, totalAttendedClasses };
+}
+
+export async function displaySubjectOverview(uid) {
+    const subjectContainer = document.getElementById("subjectOverview");
+
+    if (!subjectContainer) {
+        console.error("Element with ID 'subjectOverview' not found.");
+        return;
+    }
+
+    subjectContainer.innerHTML = "<p>Loading subjects...</p>"; // Show loading state
+
+    try {
+        const approvedSubjects = await fetchSubjectOverview(uid);
+
+        if (!approvedSubjects || approvedSubjects.length === 0) {
+            subjectContainer.innerHTML = "<p>No approved subjects found.</p>";
+            return;
+        }
+
+        subjectContainer.innerHTML = ""; // Clear loading text
+
+        // Create the subject cards dynamically
+        const subjectWrapper = document.createElement("div");
+        subjectWrapper.className = "subject-wrapper";
+
+        for (const subject of approvedSubjects) {
+            const { totalClasses, totalAttendedClasses } = await getAttendanceData(uid, subject.id);
+            const attendanceRatio = `${totalAttendedClasses}/${totalClasses}`;
+            let statusColor = "gray";
+
+            const attendancePercentage = totalClasses > 0 
+                ? totalAttendedClasses / totalClasses 
+                : 0;
+            
+            if (attendancePercentage >= 0.8) {
+                statusColor = "green"; // High attendance
+            } else if (attendancePercentage >= 0.5) {
+                statusColor = "yellow"; // Medium attendance
+            } else {
+                statusColor = "red"; // Low attendance
+            }
+
+            console.log(`Subject: ${subject.id}, Attendance: ${attendancePercentage * 100}%, Color: ${statusColor}`);
+
+            const subjectCard = document.createElement("div");
+            subjectCard.className = "subject-card";
+            subjectCard.innerHTML = `
+                <h3 class="subject-id">${subject.id}</h3>
+                <p class="subject-name">${subject.name}</p>
+                <p class="attendance-label">Total Classes Attended</p>
+                <div class="attendance-status">
+                    <span class="status-icon ${statusColor}">✔</span>
+                    <span class="attendance-count">${attendanceRatio}</span>
+                </div>
+            `;
+            subjectWrapper.appendChild(subjectCard);
+        }
+
+        subjectContainer.appendChild(subjectWrapper);
+    } catch (error) {
+        console.error("Error displaying subjects:", error);
+        subjectContainer.innerHTML = "<p>Error loading subjects.</p>";
+    }
+}
