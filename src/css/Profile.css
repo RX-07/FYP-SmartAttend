@@ -301,12 +301,71 @@ body {
     background-color: #003399;
 }
 
+.attendance-overview {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+}
+
+.subject-wrapper {
+    display: flex;
+    gap: 20px;
+    justify-content: space-evenly; /* Ensures equal spacing */
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.subject-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    width: 20%; /* Makes sure all 3 cards take equal width */
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; /* Adjust as needed */
+    height: 20px; /* Adjust as needed */
+    border-radius: 50%;
+    font-size: 14px; /* Adjust as needed */
+    font-weight: bold;
+    color: white;
+  }
+  
+  .green {
+    background-color: #28a745; /* Green */
+  }
+  
+  .yellow {
+    background-color: #ffc107; /* Yellow */
+  }
+  
+  .red {
+    background-color: #dc3545; /* Red */
+  }
+  
+
 /* Media Queries for Responsiveness */
 @media (max-width: 1200px) {
     .info-card {
         max-width: 48%;
     }
 }
+
 
 @media (max-width: 768px) {
     .profile-card {
@@ -330,6 +389,16 @@ body {
     .profile-extra-details {
         grid-template-columns: 1fr;
     }
+
+    .subject-wrapper {
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center;
+    }
+
+    .subject-card {
+        width: 80%; /* Increase card width to fit screen better */
+        max-width: 400px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -344,5 +413,15 @@ body {
 
     .btn-cancel, .btn-submit {
         width: 100%;
+    }
+
+    .subject-wrapper {
+        gap: 10px; /* Reduce gap for smaller screens */
+        padding: 10px;
+    }
+
+    .subject-card {
+        width: 100%; /* Take full width */
+        padding: 15px; /* Reduce padding */
     }
 }
