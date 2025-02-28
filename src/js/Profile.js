@@ -1,4 +1,5 @@
 import { auth, db, doc, getDoc, getDocs, updateDoc, storage, ref, deleteObject, uploadBytes, getDownloadURL, collection, onSnapshot } from './FirebaseConfig.js';
+import emailjs from "@emailjs/browser";
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 
@@ -253,7 +254,7 @@ export async function displaySubjectOverview(uid) {
         return;
     }
 
-    subjectContainer.innerHTML = "<p>Loading subjects...</p>"; // Show loading state
+    subjectContainer.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p>Loading Info...</p></div>`;
 
     try {
         const approvedSubjects = await fetchSubjectOverview(uid);
@@ -286,8 +287,6 @@ export async function displaySubjectOverview(uid) {
                 statusColor = "red"; // Low attendance
             }
 
-            console.log(`Subject: ${subject.id}, Attendance: ${attendancePercentage * 100}%, Color: ${statusColor}`);
-
             const subjectCard = document.createElement("div");
             subjectCard.className = "subject-card";
             subjectCard.innerHTML = `
@@ -308,3 +307,65 @@ export async function displaySubjectOverview(uid) {
         subjectContainer.innerHTML = "<p>Error loading subjects.</p>";
     }
 }
+
+async function sendAttendanceWarnings(uid) {
+
+    try {
+        //  Fetch student data for the logged-in user
+        const studentRef = doc(db, "Students", uid);
+        const studentDoc = await getDoc(studentRef);
+
+        if (!studentDoc.exists()) {
+            console.log(` No student data found for UID: ${uid}`);
+            return;
+        }
+
+        const studentData = studentDoc.data();
+        const studentEmail = studentData.email;
+        const studentName = studentData.fullName;
+        const enrolledSubjects = await fetchSubjectOverview(uid);
+                
+
+        for (const subject of enrolledSubjects) {
+
+            //  Fetch attendance data for this subject
+            const { totalClasses, totalAttendedClasses } = await getAttendanceData(uid, subject.id);
+
+            if (totalClasses === 0) {
+                continue;
+            }
+
+            const attendancePercentage = (totalAttendedClasses / totalClasses) * 100;
+
+
+            //  Send warning if attendance < 50% after 4 weeks (or middle semester)
+            if (totalClasses >= 4 && attendancePercentage < 50) {
+                await sendWarningEmail(studentEmail, studentName, subject.id, attendancePercentage);
+            }
+        }
+    } catch (error) {
+        console.error( error);
+    }
+}
+
+async function sendWarningEmail(email, fullName, subjectId, attendancePercentage) {
+    emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+            to_email: email, 
+            user_name: fullName,
+            subject_id: subjectId,
+            attendance_percentage: attendancePercentage.toFixed(2), // Format percentage
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    )
+    .catch(error => {
+        console.error("Error sending email:", error);
+    });
+}
+
+document.getElementById("strawberry-burst").addEventListener("click", async () => {
+    await sendAttendanceWarnings(uid);
+});
+
