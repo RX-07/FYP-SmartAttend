@@ -66,8 +66,9 @@ function loadNavBar(userRole) {
         `;
     } else if (userRole === "admin-logged-in") {
         navContent = `
+            <a href="adminClass.html">Class Management</a>
             <a href="subjectApprove.html">Subject Enrolment Review</a>
-            <a href="timetable.html">Class Schedule Management</a>
+            <a href="timetable.html">Timetable Management</a>
             <a href="MCapproval.html">MC Review</a>
             <button class="btn logout">Log Out</button>
         `;

@@ -1,7 +1,7 @@
 // Import Firebase SDK with consistent versioning
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { getFirestore, writeBatch, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
+import { getFirestore, writeBatch, doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot, collectionGroup } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 // Your web app's Firebase configuration
@@ -46,6 +46,7 @@ export {
     where, 
     getDocs,
     onSnapshot, 
+    collectionGroup,
 };
 
 // Function to handle user login
