@@ -19,6 +19,7 @@ export default defineConfig({
         timetable: resolve(__dirname, 'src/timetable.html'),
         submitMC: resolve(__dirname, 'src/submitMC.html'),
         MCapproval: resolve(__dirname, 'src/MCapproval.html'),
+        adminClass: resolve(__dirname, 'src/adminClass.html'),
       },
     },
   },
