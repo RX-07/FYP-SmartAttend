@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="node_modules/toastr/build/toastr.min.css">
+    <link rel="stylesheet" href="css/Header.css">
+    <link rel="stylesheet" href="css/adminClass.css">
+</head>
+<body>
+
+    <!-- Navbar Section -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <div class="logo-section">
+                    <img src="Images/Logo.jpeg" alt="HELP University Logo">
+                </div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse flex-column" id="navbarNav">
+                    <div id="nav-links" class="nav-links ms-auto"></div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container Section -->
+    <div class="container mt-4">
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div>
+                <label for="categoryFilter" class="fw-bold">Filter by Category:</label>
+                <select id="categoryFilter" class="form-select">
+                    <option value="all">All Subjects</option>
+                    <option value="BIT">BIT (Bachelor of IT)</option>
+                    <option value="BDA">BDA (Big Data Analytics)</option>
+                    <option value="BCS">BCS (Cybersecurity)</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="searchInput" class="fw-bold">Search:</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by Subject ID or Name">
+            </div>
+        </div>
+    
+        <div id="adminSubjects" class="row mt-4 justify-content-center">
+            <!-- Subjects will be loaded here dynamically -->
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="module" src="js/Header.js"></script>
+    <script type="module" src="js/adminClass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+</html>

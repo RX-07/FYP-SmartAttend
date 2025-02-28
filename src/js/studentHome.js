@@ -123,7 +123,7 @@ export async function renderSubjectsAsCards(subjects) {
         return;
     }
 
-    container.innerHTML = ''; // Clear previous content
+    container.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p>Loading subjects...</p></div>`;
 
     if (subjects.length === 0) {
         container.innerHTML = "<p>No enrolled subjects found.</p>";
@@ -131,6 +131,7 @@ export async function renderSubjectsAsCards(subjects) {
     }
 
     const now = new Date();
+    const subjectCards =[];
 
     for (const subject of subjects) {
 
@@ -155,8 +156,11 @@ export async function renderSubjectsAsCards(subjects) {
             </button>
         `;
 
-        container.appendChild(card);
+        subjectCards.push(card);
     }
+    
+    container.innerHTML = ''; 
+    subjectCards.forEach(card => container.appendChild(card));
 }
 
 // Fetch and display the student’s name as a greeting
