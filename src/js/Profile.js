@@ -25,7 +25,7 @@ async function fetchProfileData(userRef) {
         if (docSnap.exists()) {
             const userData = docSnap.data();
             displayProfileData(userData);
-            displayAttendanceOverview(userData);
+            //displaySubjectOverview(userRef);
         } else {
             console.log('No such document!');
         }
