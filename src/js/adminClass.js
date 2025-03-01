@@ -1,6 +1,7 @@
 import { db, collectionGroup, getDocs } from "./FirebaseConfig.js";
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import { generateExcelReport } from "./generateReport.js";
 
 toastr.options.positionClass = 'toast-bottom-right';
 
@@ -145,8 +146,10 @@ function attachEventListeners() {
     });
 }
 
-function generateReport(subjectId) {
-    console.log("Generating report for:", subjectId);
+async function generateReport(subjectId) {
+    toastr.info("Generating Attendance Report", subjectId);
+    await generateExcelReport(subjectId);
+
 }
 
 function manageQuizTopics(subjectId) {

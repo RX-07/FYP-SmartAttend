@@ -169,7 +169,24 @@ export async function displayStudentGreeting(uid) {
         const studentDoc = await getDoc(doc(db, "Students", uid));
         if (studentDoc.exists()) {
             const studentName = studentDoc.data().fullName || "Student";
-            document.getElementById('semester-type').textContent = "Semester 3, August 2024";
+
+            // Get current date
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1; // JavaScript months are 0-based (0 = Jan)
+
+            // Determine semester
+            let semester;
+            if (month >= 1 && month <= 5) {
+                semester = 1;
+            } else if (month >= 6 && month <= 8) {
+                semester = 2;
+            } else {
+                semester = 3;
+            }
+
+            // Update UI
+            document.getElementById('semester-type').textContent = `Semester ${semester}, ${year}`;
             document.getElementById('student-greeting').textContent = `Hello, ${studentName} 😊!`;
         }
     } catch (error) {
