@@ -153,6 +153,7 @@ async function generateReport(subjectId) {
 }
 
 function manageQuizTopics(subjectId) {
+    window.location.href = `manageQuiz.html?subject=${subjectId}`;
     console.log("Managing quiz topics for:", subjectId);
 }
 
