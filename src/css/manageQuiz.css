@@ -1,0 +1,98 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+/* Navbar */
+header {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #fff;
+    z-index: 1000;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Content */
+.container {
+    max-width: 800px;
+    margin: 100px auto 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown */
+.dropdown-container {
+    margin-bottom: 20px;
+}
+
+#weekDropdown {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Quiz Topic Box */
+.quiz-topic {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px; /* Add spacing between elements */
+}
+
+.quiz-topic input {
+    flex: 1;
+    padding: 10px; /* Added padding */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.delete-icon{
+    color: red;
+    cursor: pointer;
+    padding: 8px;
+}
+
+/* Save Button */
+.btn-save {
+    width: 100%;
+    padding: 10px;
+    background-color: #003399;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px; /* Add spacing between Save button and table title */
+}
+
+.btn-save:hover {
+    background-color: #002266;
+}
+
+/* Summary Table */
+h3 {
+    margin-top: 20px; /* Added gap between table title and button */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
