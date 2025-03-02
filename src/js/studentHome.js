@@ -212,22 +212,41 @@ export async function handleCheckIn(subjectId, classId) {
         }
 
         const studentData = studentDoc.data();
+        const allowedLatitude = 3.178273;
+        const allowedLongitude = 101.549094;
+        const allowedRadius = 10; // meters
+
+        // Function to calculate distance using Haversine formula
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Radius of the Earth in meters
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
 
         // Use Geolocation API to get the current location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const distance = getDistance(latitude, longitude, allowedLatitude, allowedLongitude);
 
-                    // Reference to the class document's `students` map
+                    if (distance > allowedRadius) {
+                        toastr.warning("You are too far from the check-in location. Please make sure you are present in the classroom and try again.");
+                        return;
+                    }
+
+                    const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const classRef = doc(db, `Subjects/${subjectId}/Classes/${classId}`);
                     const classSnapshot = await getDoc(classRef);
 
                     if (classSnapshot.exists()) {
                         const attendanceMap = classSnapshot.data().attendance || {};
-
-                        // Add or update student information in the `students` map
                         attendanceMap[uid] = {
                             name: studentData.fullName,
                             email: studentData.email,
@@ -239,7 +258,6 @@ export async function handleCheckIn(subjectId, classId) {
                             },
                         };
 
-                        // Update the `students` map in the Firestore document
                         await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
                         toastr.success("Check-In successful!");
                     } else {
@@ -260,6 +278,7 @@ export async function handleCheckIn(subjectId, classId) {
         toastr.warning("Failed to check in. Please try again.");
     }
 }
+
 
 
 
