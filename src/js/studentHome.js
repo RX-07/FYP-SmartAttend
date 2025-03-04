@@ -214,7 +214,7 @@ export async function handleCheckIn(subjectId, classId) {
         const studentData = studentDoc.data();
         const allowedLatitude = 3.178273;
         const allowedLongitude = 101.549094;
-        const allowedRadius = 10; // meters
+        const allowedRadius = 10000; // meters
 
         // Function to calculate distance using Haversine formula
         function getDistance(lat1, lon1, lat2, lon2) {
@@ -278,9 +278,6 @@ export async function handleCheckIn(subjectId, classId) {
         toastr.warning("Failed to check in. Please try again.");
     }
 }
-
-
-
 
 // Add Event Listener for Check-In Buttons
 document.addEventListener('click', async (e) => {
