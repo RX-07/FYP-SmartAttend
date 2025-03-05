@@ -10,8 +10,8 @@ export async function generateQuiz(topic) {
             messages: [
                 {
                     role: "user",
-                    content: `Generate exactly three multiple-choice quiz questions in **valid JSON format**. 
-                    Follow this format strictly: 
+                    content: `Generate exactly three multiple-choice quiz questions on the topic of "${topic}" in **valid JSON format**.
+                    Follow this format strictly:
                     [
                         {
                             "question": "What is AI?",
@@ -47,10 +47,10 @@ export async function generateQuiz(topic) {
     }
 }
 
-export async function storeQuiz(subjectId, week, topic, quizData) {
+export async function storeQuiz(subjectId, week, quizData) {
     try {
         const quizRef = doc(db, "Quiz", subjectId);
-        await setDoc(quizRef, { [week]: { topic, questions: quizData } }, { merge: true });
+        await setDoc(quizRef, { [week]: { questions: quizData } }, { merge: true });
 
         console.log(`Quiz stored successfully for ${subjectId} - Week ${week}`);
     } catch (error) {
@@ -58,10 +58,9 @@ export async function storeQuiz(subjectId, week, topic, quizData) {
     }
 }
 
-export async function callQuizGenerator(subjectId, topic) {
-    const week = "Week 2";
+export async function generateAndStoreQuiz(subjectId, week, topic) {
     const quizData = await generateQuiz(topic);
     if (!quizData) return;
 
-    await storeQuiz(subjectId, week, topic, quizData);
+    await storeQuiz(subjectId, week, quizData);
 }
