@@ -20,7 +20,6 @@ export default defineConfig({
         submitMC: resolve(__dirname, 'src/submitMC.html'),
         MCapproval: resolve(__dirname, 'src/MCapproval.html'),
         adminClass: resolve(__dirname, 'src/adminClass.html'),
-        adminQuiz: resolve(__dirname, 'src/quizTopic.html'),
       },
     },
   },
