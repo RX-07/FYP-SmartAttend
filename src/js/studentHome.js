@@ -1,6 +1,7 @@
 import { auth, db, doc, getDoc, collection, getDocs, setDoc } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import { fetchQuiz } from './attendanceQuiz.js';
 
 toastr.options.positionClass = 'toast-bottom-right'; 
 
@@ -216,9 +217,8 @@ export async function handleCheckIn(subjectId, classId) {
         const allowedLongitude = 101.549094;
         const allowedRadius = 10000; // meters
 
-        // Function to calculate distance using Haversine formula
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Radius of the Earth in meters
+            const R = 6371000; // Earth radius in meters
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a =
@@ -229,7 +229,6 @@ export async function handleCheckIn(subjectId, classId) {
             return R * c;
         }
 
-        // Use Geolocation API to get the current location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -241,29 +240,34 @@ export async function handleCheckIn(subjectId, classId) {
                         return;
                     }
 
-                    const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const classRef = doc(db, `Subjects/${subjectId}/Classes/${classId}`);
-                    const classSnapshot = await getDoc(classRef);
+                    // Display quiz first before allowing check-in
+                    fetchQuiz(subjectId, classId, async () => {
+                        // This callback runs AFTER quiz is submitted
 
-                    if (classSnapshot.exists()) {
-                        const attendanceMap = classSnapshot.data().attendance || {};
-                        attendanceMap[uid] = {
-                            name: studentData.fullName,
-                            email: studentData.email,
-                            checkInTime,
-                            status: "Present",
-                            location: {
-                                latitude,
-                                longitude,
-                            },
-                        };
+                        const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const classRef = doc(db, `Subjects/${subjectId}/Classes/${classId}`);
+                        const classSnapshot = await getDoc(classRef);
 
-                        await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
-                        toastr.success("Check-In successful!");
-                    } else {
-                        console.error(`Class document ${classId} not found in subject ${subjectId}`);
-                        toastr.warning("Class not found. Please try again.");
-                    }
+                        if (classSnapshot.exists()) {
+                            const attendanceMap = classSnapshot.data().attendance || {};
+                            attendanceMap[uid] = {
+                                name: studentData.fullName,
+                                email: studentData.email,
+                                checkInTime,
+                                status: "Present",
+                                location: {
+                                    latitude,
+                                    longitude,
+                                },
+                            };
+
+                            await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
+                            toastr.success("Check-In successful!");
+                        } else {
+                            console.error(`Class document ${classId} not found in subject ${subjectId}`);
+                            toastr.warning("Class not found. Please try again.");
+                        }
+                    });
                 },
                 (error) => {
                     console.error("Error getting location:", error);
