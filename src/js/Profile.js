@@ -26,7 +26,6 @@ async function fetchProfileData(userRef) {
         if (docSnap.exists()) {
             const userData = docSnap.data();
             displayProfileData(userData);
-            //displaySubjectOverview(userRef);
         } else {
             console.log('No such document!');
         }
@@ -369,3 +368,200 @@ document.getElementById("strawberry-burst").addEventListener("click", async () =
     await sendAttendanceWarnings(uid);
 });
 
+document.addEventListener("DOMContentLoaded", async function () {
+    const ctx = document.getElementById("studentChart").getContext("2d");
+
+    // async function fetchClassStartTime(subjectId) {
+    //     try {
+    //         const classesRef = collection(db, "Subjects", subjectId, "Classes");
+    //         const snapshot = await getDocs(classesRef);
+    
+    //         let classStartTimes = {}; // Store start times for each class
+    
+    //         snapshot.forEach(doc => {
+    //             const classData = doc.data();
+    //             const timeSlot = classData.timeSlot; // Get timeSlot field
+                
+    //             console.log(`Class: ${doc.id}, timeSlot: ${timeSlot}`); // Debugging output
+                
+    //             if (timeSlot) {
+    //                 const match = timeSlot.match(/(\d+)(AM|PM)/); // Extract start time
+    //                 if (match) {
+    //                     let hours = parseInt(match[1]);
+    //                     const period = match[2];
+    
+    //                     if (period === "PM" && hours !== 12) {
+    //                         hours += 12;
+    //                     } else if (period === "AM" && hours === 12) {
+    //                         hours = 0;
+    //                     }
+    
+    //                     classStartTimes[doc.id] = `${hours}:00`; // Store in HH:00 format
+                        
+    //                 }
+    //             }
+    //         });
+    //         return classStartTimes;
+
+    //     } catch (error) {
+    //         console.error("Error fetching class start times:", error);
+    //         return {};
+    //     }
+    // }
+    
+    async function fetchPunctualityData(subjectId) {
+        try {
+            const classesRef = collection(db, "Subjects", subjectId, "Classes");
+            const snapshot = await getDocs(classesRef);
+            console.log(snapshot);
+    
+            let totalLateMinutes = 0;
+            let lateCheckIns = 0;
+            let now = new Date();
+    
+            snapshot.forEach(doc => {
+                const classData = doc.data();
+                const timeSlot = classData.timeSlot; // Example: "Monday_10AM-12PM"
+                const attendanceData = classData.attendance || {};
+    
+                if (!timeSlot) {
+                    console.warn(`No timeSlot found for class: ${doc.id}`);
+                    return;
+                }
+    
+                // Extract the day and time range
+                const [day, timeRange] = timeSlot.split('_');
+                const [startTime, _] = timeRange.split('-'); // Only need the start time
+    
+                // Get current day (localized)
+                const currentDay = now.toLocaleString('en-MY', { weekday: 'long' });
+    
+                // Ensure class is for the selected day
+                if (day !== currentDay) {
+                    return;
+                }
+    
+                // Convert start time to 24-hour format
+                const parseTime = (timeStr) => {
+                    const timeParts = timeStr.match(/(\d+)(AM|PM)/);
+                    if (timeParts) {
+                        let hour = parseInt(timeParts[1]);
+                        if (timeParts[2] === 'PM' && hour < 12) {
+                            hour += 12; // Convert PM times (except 12 PM) to 24-hour format
+                        }
+                        if (timeParts[2] === 'AM' && hour === 12) {
+                            hour = 0; // 12 AM is midnight
+                        }
+                        return hour;
+                    }
+                    return null;
+                };
+    
+                const classStartHours = parseTime(startTime);
+                if (classStartHours === null) {
+                    console.warn(`Invalid start time format for class: ${doc.id}`);
+                    return;
+                }
+    
+                const classStartTime = new Date();
+                classStartTime.setHours(classStartHours, 0, 0); // Assume start at HH:00
+    
+                // Process attendance data
+                Object.entries(attendanceData).forEach(([studentId, student]) => {
+                    if (studentId === auth.currentUser.uid) {
+                        const checkInTimeStr = student.checkInTime;
+                        if (checkInTimeStr) {
+                            const [time, period] = checkInTimeStr.split(" ");
+                            const [hours, minutes] = time.split(":").map(Number);
+    
+                            let checkInHours = period === "PM" && hours !== 12 ? hours + 12 : hours;
+                            checkInHours = period === "AM" && hours === 12 ? 0 : checkInHours;
+    
+                            const checkInDate = new Date();
+                            checkInDate.setHours(checkInHours, minutes, 0);
+    
+                            if (checkInDate > classStartTime) {
+                                let lateness = (checkInDate - classStartTime) / (1000 * 60); // Convert to minutes
+                                totalLateMinutes += lateness;
+                                lateCheckIns++;
+                            }
+                        }
+                    }
+                    
+                });
+            });
+    
+            let avgLateness = lateCheckIns > 0 ? totalLateMinutes / lateCheckIns : 0;
+            return { avgLateness };
+        } catch (error) {
+            console.error("Error fetching punctuality data:", error);
+            return { avgLateness: 0 };
+        }
+    }
+    
+    async function renderChart() {
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                const uid = user.uid;
+                const enrolledSubjects = await fetchSubjectOverview(uid);
+                const subjectLabelsContainer = document.getElementById("subjectLabels");
+    
+                if (!enrolledSubjects || enrolledSubjects.length === 0) {
+                    console.error("No enrolled subjects found.");
+                    subjectLabelsContainer.innerHTML = "<p>No enrolled subjects.</p>";
+                    return;
+                }
+    
+                let subjectNames = [];
+                let latenessData = [];
+    
+                for (const subject of enrolledSubjects) {
+                    const { avgLateness } = await fetchPunctualityData(subject.id);
+                    
+                    subjectNames.push(subject.name);
+                    latenessData.push(avgLateness.toFixed(2)); // Show 2 decimal places
+                }
+    
+                if (latenessData.length === 0) {
+                    console.warn("No attendance records found.");
+                    return;
+                }
+    
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: subjectNames,
+                        datasets: [
+                            {
+                                label: "Average Lateness (Minutes)",
+                                data: latenessData,
+                                backgroundColor: "#dc3545",
+                            }
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: "Average Lateness (Minutes)"
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Subjects"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+           
+    renderChart();
+});
