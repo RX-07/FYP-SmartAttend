@@ -2,6 +2,7 @@ import { db, collectionGroup, getDocs } from "./FirebaseConfig.js";
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 import { generateExcelReport } from "./generateReport.js";
+import { openModal } from "./quizTopic.js";
 
 toastr.options.positionClass = 'toast-bottom-right';
 
@@ -152,9 +153,11 @@ async function generateReport(subjectId) {
 
 }
 
-function manageQuizTopics(subjectId) {
-    window.location.href = `manageQuiz.html?subject=${subjectId}`;
-    console.log("Managing quiz topics for:", subjectId);
+async function manageQuizTopics(subjectId) {
+    const modal = document.getElementById("topic-modal");
+    modal.style.display = "block";
+
+    openModal(subjectId);
 }
 
 fetchSubjects();

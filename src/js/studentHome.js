@@ -1,6 +1,7 @@
 import { auth, db, doc, getDoc, collection, getDocs, setDoc } from './FirebaseConfig.js';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import { fetchQuiz } from './attendanceQuiz.js';
 
 toastr.options.positionClass = 'toast-bottom-right'; 
 
@@ -212,40 +213,61 @@ export async function handleCheckIn(subjectId, classId) {
         }
 
         const studentData = studentDoc.data();
+        const allowedLatitude = 3.178273;
+        const allowedLongitude = 101.549094;
+        const allowedRadius = 10000; // meters
 
-        // Use Geolocation API to get the current location
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const distance = getDistance(latitude, longitude, allowedLatitude, allowedLongitude);
 
-                    // Reference to the class document's `students` map
-                    const classRef = doc(db, `Subjects/${subjectId}/Classes/${classId}`);
-                    const classSnapshot = await getDoc(classRef);
-
-                    if (classSnapshot.exists()) {
-                        const attendanceMap = classSnapshot.data().attendance || {};
-
-                        // Add or update student information in the `students` map
-                        attendanceMap[uid] = {
-                            name: studentData.fullName,
-                            email: studentData.email,
-                            checkInTime,
-                            status: "Present",
-                            location: {
-                                latitude,
-                                longitude,
-                            },
-                        };
-
-                        // Update the `students` map in the Firestore document
-                        await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
-                        toastr.success("Check-In successful!");
-                    } else {
-                        console.error(`Class document ${classId} not found in subject ${subjectId}`);
-                        toastr.warning("Class not found. Please try again.");
+                    if (distance > allowedRadius) {
+                        toastr.warning("You are too far from the check-in location. Please make sure you are present in the classroom and try again.");
+                        return;
                     }
+
+                    // Display quiz first before allowing check-in
+                    fetchQuiz(subjectId, classId, async () => {
+                        // This callback runs AFTER quiz is submitted
+
+                        const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const classRef = doc(db, `Subjects/${subjectId}/Classes/${classId}`);
+                        const classSnapshot = await getDoc(classRef);
+
+                        if (classSnapshot.exists()) {
+                            const attendanceMap = classSnapshot.data().attendance || {};
+                            attendanceMap[uid] = {
+                                name: studentData.fullName,
+                                email: studentData.email,
+                                checkInTime,
+                                status: "Present",
+                                location: {
+                                    latitude,
+                                    longitude,
+                                },
+                            };
+
+                            await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
+                            toastr.success("Check-In successful!");
+                        } else {
+                            console.error(`Class document ${classId} not found in subject ${subjectId}`);
+                            toastr.warning("Class not found. Please try again.");
+                        }
+                    });
                 },
                 (error) => {
                     console.error("Error getting location:", error);
@@ -260,8 +282,6 @@ export async function handleCheckIn(subjectId, classId) {
         toastr.warning("Failed to check in. Please try again.");
     }
 }
-
-
 
 // Add Event Listener for Check-In Buttons
 document.addEventListener('click', async (e) => {

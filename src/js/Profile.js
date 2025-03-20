@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const monthSelector = document.getElementById("months");
     console.log(selectedMonth);
 
-    async function fetchPunctualityData(subjectId) {
+    async function fetchPunctualityData(subjectId, selectedMonth) {
         try {
             const classesRef = collection(db, "Subjects", subjectId, "Classes");
             const snapshot = await getDocs(classesRef);
@@ -390,10 +390,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const attendanceData = classData.attendance || {};
                 
                 const classDate = classData.classDate;
-                const parseMonth = classDate.split('-');
-
-                
-                const parseMonthStr = parseInt(parseMonth[1]); // Extract and return the month as an integer (1-12)
+                const parseMonthStr = parseInt(classDate.split("-")[1]);
                 
                 if (parseMonthStr !== selectedMonth) {
                     return; // Skip if class is not in the selected month
@@ -442,9 +439,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                 classStartTime.setHours(classStartHours, 0, 0); // Assume start at HH:00
     
                 // Process attendance data
-                Object.entries(attendanceData).forEach(([studentId, student]) => {
-                    if (studentId === auth.currentUser.uid) {
+                Object.entries(attendanceData).forEach(([uid, student]) => {
+                    if (uid === auth.currentUser.uid) {
                         const checkInTimeStr = student.checkInTime;
+                        console.log(checkInTimeStr);
                         if (checkInTimeStr) {
                             const [time, period] = checkInTimeStr.split(" ");
                             const [hours, minutes] = time.split(":").map(Number);

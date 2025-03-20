@@ -53,6 +53,31 @@
         <div id="adminSubjects" class="row mt-4 justify-content-center">
             <!-- Subjects will be loaded here dynamically -->
         </div>
+
+        <div id="topic-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3 id="modal-subject-title"></h3> <!-- Dynamically show Subject ID -->
+        
+                <label for="week-select">Select Week:</label>
+                <select id="week-select" class="form-control">
+                    <option value="" disabled selected>Choose a week</option>
+                    <!-- Weeks will be added dynamically -->
+                </select>
+        
+                <label for="topic-input">Enter Topic:</label>
+                <input type="text" id="topic-input" class="form-control" placeholder="Enter quiz topic for this week">
+        
+                <button id="save-quiz-btn" class="btn btn-primary">Save Topic</button>
+        
+                <hr>
+        
+                <h4>Quiz Summary</h4>
+                <div id="quiz-summary">
+                    <!-- Quiz summary will be added dynamically -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
