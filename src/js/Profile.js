@@ -373,7 +373,6 @@ document.getElementById("strawberry-burst").addEventListener("click", async () =
 document.addEventListener("DOMContentLoaded", async function () {
     const ctx = document.getElementById("studentChart").getContext("2d");
     const monthSelector = document.getElementById("months");
-    console.log(selectedMonth);
 
     async function fetchPunctualityData(subjectId, selectedMonth) {
         try {
@@ -442,7 +441,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 Object.entries(attendanceData).forEach(([uid, student]) => {
                     if (uid === auth.currentUser.uid) {
                         const checkInTimeStr = student.checkInTime;
-                        console.log(checkInTimeStr);
                         if (checkInTimeStr) {
                             const [time, period] = checkInTimeStr.split(" ");
                             const [hours, minutes] = time.split(":").map(Number);
@@ -490,7 +488,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     
                 for (const subject of enrolledSubjects) {
                     const { avgLateness } = await fetchPunctualityData(subject.id, selectedMonth);
-                    subjectNames.push(subject.name);
+                    subjectNames.push(subject.id + ' ' + subject.name);
                     latenessData.push(avgLateness.toFixed(2));
                 }
     
@@ -510,7 +508,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         labels: subjectNames,
                         datasets: [
                             {
-                                label: `Average Lateness (Minutes) - Month ${selectedMonth}`,
+                                label: `Average Lateness (Minutes)`,
                                 data: latenessData,
                                 backgroundColor: "#dc3545",
                             }
@@ -524,13 +522,21 @@ document.addEventListener("DOMContentLoaded", async function () {
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: "Average Lateness (Minutes)"
+                                    text: "Average Lateness (Minutes)",
+                                    font: {
+                                        size: 16,
+                                        weight: "bold"
+                                    }
                                 }
                             },
                             x: {
                                 title: {
                                     display: true,
-                                    text: "Subjects"
+                                    text: "Subjects",
+                                    font: {
+                                        size: 16,
+                                        weight: "bold"
+                                    }
                                 }
                             }
                         }
@@ -548,7 +554,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Render the chart initially with the current month
     const currentMonth = new Date().getMonth() + 1;
-    console.log(currentMonth);
     monthSelector.value = currentMonth;
 
     renderChart(currentMonth);
