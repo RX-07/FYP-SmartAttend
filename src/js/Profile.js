@@ -6,6 +6,8 @@ import 'toastr/build/toastr.min.css';
 toastr.options.positionClass = 'toast-bottom-right'; 
 
 let uid;
+let selectedMonth = "";
+let studentChartInstance = null;
 
 auth.onAuthStateChanged((authUser) => {
     if (authUser) {
@@ -370,50 +372,13 @@ document.getElementById("strawberry-burst").addEventListener("click", async () =
 
 document.addEventListener("DOMContentLoaded", async function () {
     const ctx = document.getElementById("studentChart").getContext("2d");
+    const monthSelector = document.getElementById("months");
+    console.log(selectedMonth);
 
-    // async function fetchClassStartTime(subjectId) {
-    //     try {
-    //         const classesRef = collection(db, "Subjects", subjectId, "Classes");
-    //         const snapshot = await getDocs(classesRef);
-    
-    //         let classStartTimes = {}; // Store start times for each class
-    
-    //         snapshot.forEach(doc => {
-    //             const classData = doc.data();
-    //             const timeSlot = classData.timeSlot; // Get timeSlot field
-                
-    //             console.log(`Class: ${doc.id}, timeSlot: ${timeSlot}`); // Debugging output
-                
-    //             if (timeSlot) {
-    //                 const match = timeSlot.match(/(\d+)(AM|PM)/); // Extract start time
-    //                 if (match) {
-    //                     let hours = parseInt(match[1]);
-    //                     const period = match[2];
-    
-    //                     if (period === "PM" && hours !== 12) {
-    //                         hours += 12;
-    //                     } else if (period === "AM" && hours === 12) {
-    //                         hours = 0;
-    //                     }
-    
-    //                     classStartTimes[doc.id] = `${hours}:00`; // Store in HH:00 format
-                        
-    //                 }
-    //             }
-    //         });
-    //         return classStartTimes;
-
-    //     } catch (error) {
-    //         console.error("Error fetching class start times:", error);
-    //         return {};
-    //     }
-    // }
-    
     async function fetchPunctualityData(subjectId) {
         try {
             const classesRef = collection(db, "Subjects", subjectId, "Classes");
             const snapshot = await getDocs(classesRef);
-            console.log(snapshot);
     
             let totalLateMinutes = 0;
             let lateCheckIns = 0;
@@ -423,7 +388,17 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const classData = doc.data();
                 const timeSlot = classData.timeSlot; // Example: "Monday_10AM-12PM"
                 const attendanceData = classData.attendance || {};
-    
+                
+                const classDate = classData.classDate;
+                const parseMonth = classDate.split('-');
+
+                
+                const parseMonthStr = parseInt(parseMonth[1]); // Extract and return the month as an integer (1-12)
+                
+                if (parseMonthStr !== selectedMonth) {
+                    return; // Skip if class is not in the selected month
+                }
+                
                 if (!timeSlot) {
                     console.warn(`No timeSlot found for class: ${doc.id}`);
                     return;
@@ -499,7 +474,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
     
-    async function renderChart() {
+    async function renderChart(selectedMonth) {
         auth.onAuthStateChanged(async user => {
             if (user) {
                 const uid = user.uid;
@@ -516,10 +491,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 let latenessData = [];
     
                 for (const subject of enrolledSubjects) {
-                    const { avgLateness } = await fetchPunctualityData(subject.id);
-                    
+                    const { avgLateness } = await fetchPunctualityData(subject.id, selectedMonth);
                     subjectNames.push(subject.name);
-                    latenessData.push(avgLateness.toFixed(2)); // Show 2 decimal places
+                    latenessData.push(avgLateness.toFixed(2));
                 }
     
                 if (latenessData.length === 0) {
@@ -527,13 +501,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                     return;
                 }
     
-                new Chart(ctx, {
+                if (studentChartInstance) {
+                    studentChartInstance.destroy();
+                }
+    
+                // ✅ Create a new chart instance
+                studentChartInstance = new Chart(ctx, {
                     type: "line",
                     data: {
                         labels: subjectNames,
                         datasets: [
                             {
-                                label: "Average Lateness (Minutes)",
+                                label: `Average Lateness (Minutes) - Month ${selectedMonth}`,
                                 data: latenessData,
                                 backgroundColor: "#dc3545",
                             }
@@ -562,6 +541,17 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         });
     }
-           
-    renderChart();
+    
+    // Event Listener for Month Selector
+    monthSelector.addEventListener("change", function () {
+        const selectedMonth = parseInt(this.value);
+        renderChart(selectedMonth);
+    });
+
+    // Render the chart initially with the current month
+    const currentMonth = new Date().getMonth() + 1;
+    console.log(currentMonth);
+    monthSelector.value = currentMonth;
+
+    renderChart(currentMonth);
 });
