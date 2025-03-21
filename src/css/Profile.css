@@ -355,14 +355,7 @@ body {
     margin-top: 20px;
 }
 
-/* Chart container for student analysis */
-.chart-container {
-    width: 100%;
-    height: 300px;
-}
-
-  
-  .green {
+.green {
     background-color: #28a745; /* Green */
   }
   
@@ -373,7 +366,91 @@ body {
   .red {
     background-color: #dc3545; /* Red */
   }
-  
+
+/*  Chart Container */
+.chart-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#studentChart {
+    width: 100% !important; 
+    max-height: 500px !important;
+}
+
+/*  AI Insights Section */
+.insights-container {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    background-color: #f9f9f9;
+}
+
+/*  Insights Title */
+.insights-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/*  Insights Content */
+.insights-content-text {
+    font-size: 16px;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 600px;
+}
+
+.insights-list {
+    list-style: none; 
+    padding: 0;
+    width: 100%;
+    text-align: left;
+}
+
+/*  Individual Insight Item */
+.insight-item {
+    font-size: 16px;
+    color: #444;
+    padding: 10px;
+    background: #f8f8f8;
+    border-left: 4px solid #ff4d4d; 
+    margin-bottom: 10px;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.insight-item:hover {
+    background: #ffe6e6;
+}
+/*  Generate Insights Button */
+#generate-insights-btn {
+    background: #ff4d4d;
+    color: white;
+    font-size: 14px; 
+    padding: 10px 16px; 
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    align-self: center; 
+    margin-top: 10px;
+}
+
+#generate-insights-btn:hover {
+    background: #e60000;
+}
+
 
 /* Media Queries for Responsiveness */
 @media (max-width: 1200px) {
@@ -415,6 +492,18 @@ body {
         width: 80%; /* Increase card width to fit screen better */
         max-width: 400px;
     }
+
+    .chart-container {
+        max-width: 90%;
+    }
+
+    #studentChart {
+        max-height: 400px !important;
+    }
+
+    .insights-container {
+        max-width: 90%; /* Keeps insights aligned */
+    }
 }
 
 @media (max-width: 480px) {
@@ -439,5 +528,28 @@ body {
     .subject-card {
         width: 100%; /* Take full width */
         padding: 15px; /* Reduce padding */
+    }
+
+    .chart-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #studentChart {
+        max-height: 350px !important; /* Reduce height for better fit */
+    }
+
+    .insights-container {
+        padding: 15px;
+    }
+
+    .insight-item {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #generate-insights-btn {
+        width: 100%; 
+        max-width: 220px;
     }
 }

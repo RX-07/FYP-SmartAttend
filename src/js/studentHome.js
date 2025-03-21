@@ -2,6 +2,7 @@ import { auth, db, doc, getDoc, collection, getDocs, setDoc } from './FirebaseCo
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 import { fetchQuiz } from './attendanceQuiz.js';
+import { fetchAndSaveAllAttendance } from './attendanceInsight.js';
 
 toastr.options.positionClass = 'toast-bottom-right'; 
 
@@ -249,7 +250,8 @@ export async function handleCheckIn(subjectId, classId) {
                         const classSnapshot = await getDoc(classRef);
 
                         if (classSnapshot.exists()) {
-                            const attendanceMap = classSnapshot.data().attendance || {};
+                            const classData = classSnapshot.data();
+                            const attendanceMap = classData.attendance || {};
                             attendanceMap[uid] = {
                                 name: studentData.fullName,
                                 email: studentData.email,
@@ -263,6 +265,8 @@ export async function handleCheckIn(subjectId, classId) {
 
                             await setDoc(classRef, { attendance: attendanceMap }, { merge: true });
                             toastr.success("Check-In successful!");
+
+                            await fetchAndSaveAllAttendance();
                         } else {
                             console.error(`Class document ${classId} not found in subject ${subjectId}`);
                             toastr.warning("Class not found. Please try again.");
