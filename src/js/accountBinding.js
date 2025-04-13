@@ -127,7 +127,7 @@ export function validateDeviceId() {
     });
 }
 
-function promptBindDevice() {
+export function promptBindDevice() {
     if (confirm('This account is not bound to this device. Do you want to bind it now?')) {
         bindDeviceToAccount();
     } else {
@@ -139,7 +139,7 @@ function promptBindDevice() {
     }
 }
 
-async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
+export async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
     if (!canChangeDevice(lastBound)) {
         return;
     }
@@ -178,7 +178,7 @@ async function promptChangeDeviceOrSignOut(userDocRef, deviceId, lastBound) {
     }
 }
 
-function canChangeDevice(lastBound) {
+export function canChangeDevice(lastBound) {
     const cooldownTime = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     if (!lastBound) return true; // No previous binding, allow change
 
@@ -199,7 +199,7 @@ function canChangeDevice(lastBound) {
     return true;
 }
 
-function getDeviceIdentifier() {
+export function getDeviceIdentifier() {
     let deviceId = localStorage.getItem('deviceId');
     if (!deviceId) {
         deviceId = crypto.randomUUID();
@@ -208,11 +208,11 @@ function getDeviceIdentifier() {
     return deviceId;
 }
 
-function getDeviceName() {
+export function getDeviceName() {
     return navigator.userAgent;
 }
 
-function getDeviceType() {
+export function getDeviceType() {
     const userAgent = navigator.userAgent.toLowerCase();
     if (userAgent.includes('mobile')) return 'Mobile';
     if (userAgent.includes('tablet')) return 'Tablet';

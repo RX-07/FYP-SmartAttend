@@ -28,11 +28,12 @@ export async function generateExcelReport(subjectId) {
                     address = await getAddressFromCoordinates(student.location.latitude, student.location.longitude);
                 }
 
+                const checkInTime = formatTo24Hour(student.checkInTime);
                 return {
                     Name: student.name,
                     Email: student.email,
                     Status: student.status,
-                    CheckInTime: student.checkInTime,
+                    CheckInTime: checkInTime,
                     Location: address || "N/A"
                 };
             })
@@ -58,6 +59,38 @@ export async function generateExcelReport(subjectId) {
     saveAs(fileBlob, fileName);
     toastr.success(`Excel report downloaded: ${fileName}`);
 }
+
+export function formatTo24Hour(timeString) {
+    if (!timeString) return '';
+  
+    let normalizedTime = timeString.trim().toUpperCase();
+  
+    // Check if it includes AM or PM
+    const isPM = normalizedTime.includes('PM');
+    const isAM = normalizedTime.includes('AM');
+  
+    // Remove AM or PM for easier parsing
+    normalizedTime = normalizedTime.replace(/AM|PM/, '').trim();
+  
+    const [hourPart, minutePart = '00'] = normalizedTime.split(':');
+    let hours = parseInt(hourPart, 10);
+    let minutes = parseInt(minutePart, 10);
+  
+    if (isNaN(hours) || isNaN(minutes)) {
+      return '';
+    }
+  
+    if (isPM && hours < 12) {
+      hours += 12;
+    } else if (isAM && hours === 12) {
+      hours = 0;
+    }
+  
+    const paddedHours = hours.toString().padStart(2, '0');
+    const paddedMinutes = minutes.toString().padStart(2, '0');
+  
+    return `${paddedHours}:${paddedMinutes}`;
+  }
 
 function formatWorksheet(worksheet, data) {
     const range = XLSX.utils.decode_range(worksheet["!ref"]); // Get range of data
