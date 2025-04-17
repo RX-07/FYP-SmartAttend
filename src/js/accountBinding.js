@@ -194,6 +194,11 @@ export function canChangeDevice(lastBound) {
     if (timeElapsed < cooldownTime) {
         const remainingDays = Math.ceil((cooldownTime - timeElapsed) / (24 * 60 * 60 * 1000));
         toastr.info(`You can only change devices once every 7 days. Please try again in ${remainingDays} days.`);
+        toastr.info('Sign out initiated.');
+        setTimeout(() => {
+            auth.signOut();
+            window.location.href = 'index.html';
+        }, 6000);
         return false;
     }
     return true;

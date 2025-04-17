@@ -6,7 +6,7 @@ const client = new HfInference(import.meta.env.VITE_HUGGING_FACE_API_KEY);
 export async function generateQuiz(topic) {
     try {
         const chatCompletion = await client.chatCompletion({
-            model: "mistralai/Mistral-7B-Instruct-v0.2",
+            model: "mistralai/Mistral-7B-Instruct-v0.3",
             messages: [
                 {
                     role: "user",
